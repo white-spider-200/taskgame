@@ -9,7 +9,7 @@ export type TeamMember = {
 };
 
 export type SubmissionDTO = {
-  type: "text" | "image" | "both";
+  type: "text" | "image" | "video" | "both";
   text: string;
   fileUrl: string | null;
 };

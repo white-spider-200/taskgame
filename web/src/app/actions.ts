@@ -22,7 +22,13 @@ const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/webp": "webp",
   "image/gif": "gif",
 };
+const ALLOWED_VIDEO_TYPES: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/webm": "webm",
+  "video/quicktime": "mov",
+};
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 const credSchema = z.object({
   email: z.string().email(),
@@ -176,14 +182,25 @@ export async function finishTaskAction(formData: FormData) {
   let fileUrl: string | null = null;
   let fileName: string | null = null;
 
+  let fileKind: "image" | "video" | null = null;
+
   if (hasFile) {
     const mime = file.type;
-    const ext = ALLOWED_IMAGE_TYPES[mime];
-    if (!ext) {
-      return { error: "صيغة الصورة غير مدعومة (JPEG / PNG / WebP / GIF)" };
+    const imageExt = ALLOWED_IMAGE_TYPES[mime];
+    const videoExt = ALLOWED_VIDEO_TYPES[mime];
+    if (!imageExt && !videoExt) {
+      return { error: "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV)" };
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      return { error: "حجم الصورة أكبر من 5 ميغابايت" };
+    fileKind = imageExt ? "image" : "video";
+    const ext = imageExt ?? videoExt!;
+    const maxBytes = fileKind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+    if (file.size > maxBytes) {
+      return {
+        error:
+          fileKind === "video"
+            ? "حجم الفيديو أكبر من 50 ميغابايت"
+            : "حجم الصورة أكبر من 5 ميغابايت",
+      };
     }
 
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -196,7 +213,7 @@ export async function finishTaskAction(formData: FormData) {
     fileName = file.name || safeName;
   }
 
-  const type = text && fileUrl ? "both" : fileUrl ? "image" : "text";
+  const type = text && fileUrl ? "both" : fileKind ?? "text";
   const elapsedMs = Date.now() - task.startedAt.getTime();
 
   await prisma.$transaction([

@@ -403,13 +403,13 @@ export function TasksView({
                       >
                         <input
                           type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif"
+                          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                           onChange={(e) => onProofFileChange(e.target.files?.[0] ?? null)}
-                          style={{ 
+                          style={{
                             display: "none",
                           }}
                         />
-                        تحميل صورة إثبات
+                        تحميل صورة أو فيديو إثبات
                       </label>
                 
                       {proofFile ? (
@@ -506,18 +506,32 @@ export function TasksView({
                         </div>
                       ) : null}
                       {t.submission.fileUrl ? (
-                        <img
-                          src={t.submission.fileUrl}
-                          alt="إثبات المهمة"
-                          style={{
-                            maxWidth: "100%",
-                            maxHeight: 280,
-                            borderRadius: 12,
-                            objectFit: "contain",
-                            border: "1px solid #FFE3B3",
-                            background: "#FFF",
-                          }}
-                        />
+                        /\.(mp4|webm|mov)$/i.test(t.submission.fileUrl) ? (
+                          <video
+                            src={t.submission.fileUrl}
+                            controls
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: 280,
+                              borderRadius: 12,
+                              border: "1px solid #FFE3B3",
+                              background: "#FFF",
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={t.submission.fileUrl}
+                            alt="إثبات المهمة"
+                            style={{
+                              maxWidth: "100%",
+                              maxHeight: 280,
+                              borderRadius: 12,
+                              objectFit: "contain",
+                              border: "1px solid #FFE3B3",
+                              background: "#FFF",
+                            }}
+                          />
+                        )
                       ) : null}
                     </div>
                   ) : null}
