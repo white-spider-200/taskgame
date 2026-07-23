@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="b1a1341d-71f3-4771-ae95-911131c45e15"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet data-dc-atomics="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>/* arabic */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("02a723cc-6b79-4a8e-8c53-2e358808197b") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("56bfe65d-b254-43e2-886e-afea3d173f63") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("afe4ff75-fa5d-447d-a22b-8c2bda7d7c2e") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("881e5823-37fc-4a6f-9a41-41ff0d068bff") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("02a723cc-6b79-4a8e-8c53-2e358808197b") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("56bfe65d-b254-43e2-886e-afea3d173f63") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("afe4ff75-fa5d-447d-a22b-8c2bda7d7c2e") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("881e5823-37fc-4a6f-9a41-41ff0d068bff") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("02a723cc-6b79-4a8e-8c53-2e358808197b") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("56bfe65d-b254-43e2-886e-afea3d173f63") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("afe4ff75-fa5d-447d-a22b-8c2bda7d7c2e") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("881e5823-37fc-4a6f-9a41-41ff0d068bff") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("02a723cc-6b79-4a8e-8c53-2e358808197b") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("56bfe65d-b254-43e2-886e-afea3d173f63") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("afe4ff75-fa5d-447d-a22b-8c2bda7d7c2e") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("881e5823-37fc-4a6f-9a41-41ff0d068bff") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* arabic */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("02a723cc-6b79-4a8e-8c53-2e358808197b") format('woff2');
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC, U+102E0-102FB, U+10E60-10E7E, U+10EC2-10EC4, U+10EFC-10EFF, U+1EE00-1EE03, U+1EE05-1EE1F, U+1EE21-1EE22, U+1EE24, U+1EE27, U+1EE29-1EE32, U+1EE34-1EE37, U+1EE39, U+1EE3B, U+1EE42, U+1EE47, U+1EE49, U+1EE4B, U+1EE4D-1EE4F, U+1EE51-1EE52, U+1EE54, U+1EE57, U+1EE59, U+1EE5B, U+1EE5D, U+1EE5F, U+1EE61-1EE62, U+1EE64, U+1EE67-1EE6A, U+1EE6C-1EE72, U+1EE74-1EE77, U+1EE79-1EE7C, U+1EE7E, U+1EE80-1EE89, U+1EE8B-1EE9B, U+1EEA1-1EEA3, U+1EEA5-1EEA9, U+1EEAB-1EEBB, U+1EEF0-1EEF1;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("56bfe65d-b254-43e2-886e-afea3d173f63") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("afe4ff75-fa5d-447d-a22b-8c2bda7d7c2e") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Baloo Bhaijaan 2';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("881e5823-37fc-4a6f-9a41-41ff0d068bff") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+body{margin:0;background:#FFF7EC;font-family:'Baloo Bhaijaan 2',sans-serif}
+a{color:#FF6B57}a:hover{color:#E04B38}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+input,textarea{font-family:inherit}
+</style>
+</helmet>
+
+<div dir="rtl" style="min-height: 100vh; display: flex; flex-direction: column; background: #FFF7EC;" data-screen-label="ملعب المهام — نموذج تفاعلي">
+
+  <!-- top nav -->
+  <div style="display: flex; align-items: center; gap: 24px; padding: 14px 32px; background: #FFFFFF; border-bottom: 3px solid #FFE3B3; position: sticky; top: 0; z-index: 20;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 38px; height: 38px; border-radius: 12px; background: #FF6B57; display: grid; place-items: center; color: #FFF; font-weight: 800; font-size: 20px; transform: rotate(-6deg); box-shadow: 0 3px 0 #E04B38;">م</div>
+      <div style="font-weight: 800; font-size: 19px; color: #2B2118;">ملعب المهام</div>
+    </div>
+    <div style="display: flex; gap: 6px; font-weight: 600; font-size: 15px;">
+      <div sc-camel-on-click="{{ goTasks }}" style="padding: 7px 16px; border-radius: 999px; cursor: pointer; background: {{ tabTasksBg }}; color: {{ tabTasksFg }};">المهام</div>
+      <div sc-camel-on-click="{{ goDash }}" style="padding: 7px 16px; border-radius: 999px; cursor: pointer; background: {{ tabDashBg }}; color: {{ tabDashFg }};">لوحة الإنجاز</div>
+      <div sc-camel-on-click="{{ goLeaders }}" style="padding: 7px 16px; border-radius: 999px; cursor: pointer; background: {{ tabLeadersBg }}; color: {{ tabLeadersFg }};">المتصدرون</div>
+      <div sc-camel-on-click="{{ goProfile }}" style="padding: 7px 16px; border-radius: 999px; cursor: pointer; background: {{ tabProfileBg }}; color: {{ tabProfileFg }};">ملفي</div>
+    </div>
+    <div style="margin-inline-start: auto; display: flex; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 6px; background: #FFE9A8; border: 2px solid #F2C94C; border-radius: 999px; padding: 5px 14px; font-weight: 800; color: #7A5A00; font-size: 15px;">⭐ {{ myPoints }} نقطة</div>
+      <div sc-camel-on-click="{{ goProfile }}" style="width: 36px; height: 36px; border-radius: 999px; background: #1FB6A6; color: #FFF; display: grid; place-items: center; font-weight: 700; cursor: pointer;">س</div>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; top: 76px; right: 50%; transform: translateX(50%); z-index: 50; background: #2B2118; color: #F2C94C; font-weight: 700; font-size: 15px; padding: 10px 24px; border-radius: 999px; box-shadow: 0 6px 20px rgba(43,33,24,0.3); animation: pop .3s ease;">{{ toast }}</div>
+  </sc-if>
+
+  <!-- ============ TASKS VIEW ============ -->
+  <sc-if value="{{ showTasks }}" hint-placeholder-val="{{ true }}">
+    <div style="display: grid; grid-template-columns: 1fr 280px; gap: 24px; padding: 24px 32px; flex: 1; align-items: start;" data-screen-label="المهام">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #2B2118;">مهام الفريق</h2>
+          <div style="display: flex; gap: 6px; font-weight: 700; font-size: 13px; margin-inline-start: 8px;">
+            <div sc-camel-on-click="{{ filterAll }}" style="padding: 5px 13px; border-radius: 999px; cursor: pointer; background: {{ fAllBg }}; color: {{ fAllFg }}; border: 2px solid {{ fAllBr }};">الكل</div>
+            <div sc-camel-on-click="{{ filterRun }}" style="padding: 5px 13px; border-radius: 999px; cursor: pointer; background: {{ fRunBg }}; color: {{ fRunFg }}; border: 2px solid {{ fRunBr }};">قيد التنفيذ</div>
+            <div sc-camel-on-click="{{ filterRev }}" style="padding: 5px 13px; border-radius: 999px; cursor: pointer; background: {{ fRevBg }}; color: {{ fRevFg }}; border: 2px solid {{ fRevBr }};">للتقييم</div>
+            <div sc-camel-on-click="{{ filterDone }}" style="padding: 5px 13px; border-radius: 999px; cursor: pointer; background: {{ fDoneBg }}; color: {{ fDoneFg }}; border: 2px solid {{ fDoneBr }};">منجزة</div>
+          </div>
+          <div sc-camel-on-click="{{ openModal }}" style="margin-inline-start: auto; background: #FF6B57; color: #FFF; font-weight: 700; font-size: 15px; padding: 9px 20px; border-radius: 999px; box-shadow: 0 3px 0 #E04B38; cursor: pointer;" style-hover="transform: translateY(-1px);">+ مهمة جديدة</div>
+        </div>
+
+        <sc-for list="{{ visibleTasks }}" as="t" hint-placeholder-count="3">
+          <div style="background: #FFF; border: 2px solid {{ t.border }}; border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; position: relative; animation: pop .25s ease;">
+            <sc-if value="{{ t.isReviewMine }}" hint-placeholder-val="{{ false }}">
+              <div style="position: absolute; top: -12px; inset-inline-start: 18px; background: #8B5CF6; color: #FFF; font-weight: 700; font-size: 12.5px; padding: 3px 12px; border-radius: 999px; transform: rotate(-2deg);">بانتظار تقييمك!</div>
+            </sc-if>
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 44px; height: 44px; border-radius: 999px; background: {{ t.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 17px;">{{ t.initial }}</div>
+              <div style="display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0;">
+                <div style="font-weight: 700; font-size: 17px; color: #2B2118;">{{ t.title }}</div>
+                <div style="font-size: 13.5px; color: #9A8A73; font-weight: 500;">{{ t.meta }}</div>
+              </div>
+              <sc-if value="{{ t.isRunning }}" hint-placeholder-val="{{ false }}">
+                <div style="display: flex; align-items: center; gap: 8px; background: #E8FBF4; border: 2px solid #1FB6A6; border-radius: 12px; padding: 7px 14px; font-weight: 800; color: #0E8A7D; font-size: 16px; font-variant-numeric: tabular-nums;">⏱ {{ t.timer }}</div>
+              </sc-if>
+              <sc-if value="{{ t.canFinish }}" hint-placeholder-val="{{ false }}">
+                <div sc-camel-on-click="{{ t.onFinish }}" style="background: #1FB6A6; color: #FFF; font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 999px; box-shadow: 0 3px 0 #148F82; cursor: pointer;">إنهاء ✓</div>
+              </sc-if>
+              <sc-if value="{{ t.isDone }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size: 18px; letter-spacing: 2px; color: #B87A00;">{{ t.doneStars }}</div>
+                <div style="background: #FFE9A8; border: 2px solid #F2C94C; color: #7A5A00; font-weight: 800; font-size: 14.5px; padding: 6px 14px; border-radius: 999px;">+{{ t.points }} نقاط</div>
+              </sc-if>
+              <sc-if value="{{ t.isReviewOthers }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #F7F3FF; border: 2px solid #C9B8F5; color: #5B3FA8; font-weight: 700; font-size: 12.5px; padding: 5px 13px; border-radius: 999px;">بانتظار تقييم زميل</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ t.desc }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size: 14px; color: #7A6A55; font-weight: 500; margin-inline-start: 58px; margin-top: -6px;">{{ t.desc }}</div>
+            </sc-if>
+            <sc-if value="{{ t.isReviewMine }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; align-items: center; gap: 12px; background: #F7F3FF; border-radius: 14px; padding: 10px 16px; flex-wrap: wrap;">
+                <div style="font-weight: 600; font-size: 14.5px; color: #5B3FA8;">قيّم العمل:</div>
+                <div style="display: flex; gap: 4px; font-size: 26px; line-height: 1;">{{ t.starEls }}</div>
+                <div style="font-size: 13.5px; font-weight: 700; color: #8B5CF6;">{{ t.ratingLabel }}</div>
+                <div sc-camel-on-click="{{ t.onSubmit }}" style="margin-inline-start: auto; background: {{ t.submitBg }}; color: #FFF; font-weight: 700; font-size: 13.5px; padding: 7px 16px; border-radius: 999px; box-shadow: 0 3px 0 #6D42C9; cursor: pointer;">إرسال التقييم</div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        <sc-if value="{{ emptyList }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align: center; padding: 40px; color: #9A8A73; font-weight: 600; font-size: 16px;">لا توجد مهام هنا 🎈</div>
+        </sc-if>
+      </div>
+
+      <!-- sidebar -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div style="background: #2B2118; border-radius: 18px; padding: 18px; color: #FFF;">
+          <div style="font-weight: 700; font-size: 15px; color: #F2C94C; margin-bottom: 12px;">🏆 المتصدرون</div>
+          
+        </div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 18px;">
+          <div style="font-weight: 700; font-size: 15px; color: #2B2118; margin-bottom: 10px;">إنجاز الفريق</div>
+          <div style="display: flex; align-items: baseline; gap: 6px;"><span style="font-size: 34px; font-weight: 800; color: #FF6B57;">{{ doneCount }}</span><span style="font-size: 14px; color: #9A8A73; font-weight: 600;">من {{ totalCount }} مهمة</span></div>
+          <div style="height: 12px; background: #FFEFD6; border-radius: 999px; margin-top: 10px; overflow: hidden;"><div style="width: {{ donePct }}; height: 100%; background: #FF6B57; border-radius: 999px; transition: width .4s ease;"></div></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ DASHBOARD VIEW ============ -->
+  <sc-if value="{{ showDash }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 24px 32px; display: flex; flex-direction: column; gap: 18px; flex: 1;" data-screen-label="لوحة الإنجاز">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #2B2118;">📊 لوحة الإنجاز</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 14px 18px;"><div style="font-size: 13px; color: #9A8A73; font-weight: 600;">مهام منجزة</div><div style="font-size: 30px; font-weight: 800; color: #FF6B57;">{{ doneCount }}</div></div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 14px 18px;"><div style="font-size: 13px; color: #9A8A73; font-weight: 600;">قيد التنفيذ</div><div style="font-size: 30px; font-weight: 800; color: #1FB6A6;">{{ runCount }}</div></div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 14px 18px;"><div style="font-size: 13px; color: #9A8A73; font-weight: 600;">بانتظار التقييم</div><div style="font-size: 30px; font-weight: 800; color: #8B5CF6;">{{ revCount }}</div></div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 14px 18px;"><div style="font-size: 13px; color: #9A8A73; font-weight: 600;">متوسط التقييم</div><div style="font-size: 30px; font-weight: 800; color: #B87A00;">{{ teamAvg }} ★</div></div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; align-items: start;">
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 18px 20px;">
+          <div style="font-weight: 800; font-size: 16px; color: #2B2118; margin-bottom: 14px;">من أنجز ماذا؟</div>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <sc-for list="{{ memberStats }}" as="m" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 36px; height: 36px; border-radius: 999px; background: {{ m.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 15px;">{{ m.initial }}</div>
+                <div style="width: 64px; font-weight: 700; font-size: 14.5px; color: #2B2118;">{{ m.name }}</div>
+                <div style="flex: 1; height: 18px; background: #FFEFD6; border-radius: 999px; overflow: hidden;">
+                  <div style="width: {{ m.pct }}; height: 100%; background: {{ m.color }}; border-radius: 999px; transition: width .4s ease;"></div>
+                </div>
+                <div style="width: 62px; font-weight: 700; font-size: 13.5px; color: #7A6A55; text-align: left;">{{ m.count }} مهام</div>
+                <div style="width: 48px; font-weight: 700; font-size: 13.5px; color: #B87A00;">{{ m.avg }} ★</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 18px 20px;">
+            <div style="font-weight: 800; font-size: 16px; color: #2B2118; margin-bottom: 10px;">⏱ أسرع منجز</div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 44px; height: 44px; border-radius: 999px; background: {{ fastColor }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 18px;">{{ fastInitial }}</div>
+              <div><div style="font-weight: 700; font-size: 16px; color: #2B2118;">{{ fastName }}</div><div style="font-size: 13px; color: #9A8A73; font-weight: 500;">متوسط {{ fastTime }} للمهمة</div></div>
+              <div style="margin-inline-start: auto; font-size: 26px;">⚡</div>
+            </div>
+          </div>
+          <div style="background: #2B2118; border-radius: 18px; padding: 18px 20px; color: #FFF;">
+            <div style="font-weight: 800; font-size: 16px; color: #F2C94C; margin-bottom: 10px;">🔥 إنجاز الفريق</div>
+            <div style="display: flex; align-items: baseline; gap: 8px;"><span style="font-size: 36px; font-weight: 800; color: #F2C94C;">{{ donePct }}</span><span style="font-size: 13.5px; color: #C9C0B4; font-weight: 500;">من المهام اكتملت</span></div>
+            <div style="height: 12px; background: #4A3D2E; border-radius: 999px; margin-top: 10px; overflow: hidden;"><div style="width: {{ donePct }}; height: 100%; background: #F2C94C; border-radius: 999px; transition: width .4s ease;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ LEADERS VIEW ============ -->
+  <sc-if value="{{ showLeaders }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 24px 32px; display: flex; flex-direction: column; gap: 18px; flex: 1; max-width: 680px; margin: 0 auto; width: 100%; box-sizing: border-box;" data-screen-label="المتصدرون">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #2B2118;">🏆 المتصدرون</h2>
+      <div style="display: flex; align-items: flex-end; justify-content: center; gap: 14px; padding-top: 18px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div style="width: 52px; height: 52px; border-radius: 999px; background: {{ p3.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 20px; border: 3px solid #FFF;">{{ p3.initial }}</div>
+          <div style="font-weight: 700; font-size: 14px; color: #2B2118;">{{ p3.name }}</div>
+          <div style="width: 90px; height: 64px; background: #E8C39A; border-radius: 14px 14px 0 0; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #7A5A2E;">3</div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div style="font-size: 26px;">👑</div>
+          <div style="width: 60px; height: 60px; border-radius: 999px; background: {{ p1.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 23px; border: 3px solid #F2C94C; box-shadow: 0 0 0 3px #FFF;">{{ p1.initial }}</div>
+          <div style="font-weight: 800; font-size: 15px; color: #2B2118;">{{ p1.name }} · {{ p1.pts }} ⭐</div>
+          <div style="width: 100px; height: 96px; background: #F2C94C; border-radius: 14px 14px 0 0; display: grid; place-items: center; font-weight: 800; font-size: 26px; color: #7A5A00;">1</div>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div style="width: 52px; height: 52px; border-radius: 999px; background: {{ p2.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 20px; border: 3px solid #FFF;">{{ p2.initial }}</div>
+          <div style="font-weight: 700; font-size: 14px; color: #2B2118;">{{ p2.name }}</div>
+          <div style="width: 90px; height: 78px; background: #D6D1C7; border-radius: 14px 14px 0 0; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #6B6558;">2</div>
+        </div>
+      </div>
+      <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; overflow: hidden;">
+        <sc-for list="{{ leaderRows }}" as="l" hint-placeholder-count="5">
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid #FFF3DE; background: {{ l.bg }};">
+            <div style="width: 26px; font-weight: 800; font-size: 15px; color: #9A8A73;">{{ l.rank }}</div>
+            <div style="width: 36px; height: 36px; border-radius: 999px; background: {{ l.color }}; color: #FFF; display: grid; place-items: center; font-weight: 700; font-size: 15px;">{{ l.initial }}</div>
+            <div style="flex: 1; font-weight: 700; font-size: 15px; color: #2B2118;">{{ l.name }}</div>
+            <div style="font-size: 13px; color: #9A8A73; font-weight: 600;">{{ l.tasks }} مهمة · {{ l.avg }} ★</div>
+            <div style="background: #FFE9A8; border: 2px solid #F2C94C; color: #7A5A00; font-weight: 800; font-size: 13.5px; padding: 4px 12px; border-radius: 999px;">{{ l.pts }} ⭐</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ PROFILE VIEW ============ -->
+  <sc-if value="{{ showProfile }}" hint-placeholder-val="{{ false }}">
+    <div style="padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; flex: 1; max-width: 680px; margin: 0 auto; width: 100%; box-sizing: border-box;" data-screen-label="ملفي">
+      <div style="background: #2B2118; border-radius: 22px; padding: 22px 24px; color: #FFF; display: flex; align-items: center; gap: 16px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -30px; left: -30px; width: 120px; height: 120px; border-radius: 999px; background: rgba(242,201,76,0.15);"></div>
+        <div style="width: 64px; height: 64px; border-radius: 999px; background: #1FB6A6; display: grid; place-items: center; font-weight: 800; font-size: 26px; border: 3px solid #F2C94C;">س</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 800; font-size: 21px;">سارة العتيبي</div>
+          <div style="font-size: 13.5px; color: #C9C0B4; font-weight: 500;">فريق التسويق</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 30px; font-weight: 800; color: #F2C94C;">{{ myPoints }}</div>
+          <div style="font-size: 12.5px; color: #C9C0B4; font-weight: 600;">⭐ نقطة</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 16px; padding: 12px 14px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #FF6B57;">{{ myDone }}</div><div style="font-size: 12.5px; color: #9A8A73; font-weight: 600;">مهمة منجزة</div></div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 16px; padding: 12px 14px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #B87A00;">{{ myAvg }} ★</div><div style="font-size: 12.5px; color: #9A8A73; font-weight: 600;">متوسط التقييم</div></div>
+        <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 16px; padding: 12px 14px; text-align: center;"><div style="font-size: 24px; font-weight: 800; color: #0E8A7D;">{{ myTime }}</div><div style="font-size: 12.5px; color: #9A8A73; font-weight: 600;">متوسط الوقت</div></div>
+      </div>
+      <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 16px 20px;">
+        <div style="font-weight: 800; font-size: 16px; color: #2B2118; margin-bottom: 12px;">🎖 الشارات</div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px;"><div style="width: 56px; height: 56px; border-radius: 999px; background: #FFE9A8; border: 2px solid #F2C94C; display: grid; place-items: center; font-size: 26px; transform: rotate(-5deg);">⚡</div><div style="font-size: 12px; font-weight: 700; color: #7A6A55; text-align: center;">أسرع منجز</div></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px;"><div style="width: 56px; height: 56px; border-radius: 999px; background: #E8FBF4; border: 2px solid #1FB6A6; display: grid; place-items: center; font-size: 26px; transform: rotate(4deg);">🔥</div><div style="font-size: 12px; font-weight: 700; color: #7A6A55; text-align: center;">7 أيام متتالية</div></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px;"><div style="width: 56px; height: 56px; border-radius: 999px; background: #F7F3FF; border: 2px solid #C9B8F5; display: grid; place-items: center; font-size: 26px; transform: rotate(-3deg);">🌟</div><div style="font-size: 12px; font-weight: 700; color: #7A6A55; text-align: center;">تقييم 5 نجوم ×10</div></div>
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; width: 76px; opacity: 0.4;"><div style="width: 56px; height: 56px; border-radius: 999px; background: #F0EDE6; border: 2px dashed #C9C0B4; display: grid; place-items: center; font-size: 26px;">🏅</div><div style="font-size: 12px; font-weight: 700; color: #9A8A73; text-align: center;">100 مهمة</div></div>
+        </div>
+      </div>
+      <div style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 18px; padding: 16px 20px;">
+        <div style="font-weight: 800; font-size: 16px; color: #2B2118; margin-bottom: 10px;">آخر مهامي</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+          <sc-for list="{{ myTasks }}" as="mt" hint-placeholder-count="3">
+            <div style="display: flex; align-items: center; gap: 10px;"><span style="flex: 1; font-weight: 600; color: #2B2118;">{{ mt.title }}</span><span style="color: #9A8A73; font-weight: 500;">{{ mt.time }}</span><span style="color: #B87A00; letter-spacing: 1px;">{{ mt.stars }}</span></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ NEW TASK MODAL ============ -->
+  <sc-if value="{{ modalOpen }}" hint-placeholder-val="{{ false }}">
+    <div sc-camel-on-click="{{ closeModal }}" style="position: fixed; inset: 0; background: rgba(43,33,24,0.45); z-index: 40; display: grid; place-items: center; padding: 20px;">
+      <div sc-camel-on-click="{{ stopProp }}" style="background: #FFF; border: 2px solid #FFE3B3; border-radius: 22px; padding: 26px 28px; display: flex; flex-direction: column; gap: 16px; width: 520px; max-width: 100%; box-sizing: border-box; animation: pop .25s ease;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="width: 42px; height: 42px; border-radius: 14px; background: #FF6B57; display: grid; place-items: center; color: #FFF; font-size: 22px; transform: rotate(-6deg); box-shadow: 0 3px 0 #E04B38;">✏️</div>
+          <div>
+            <div style="font-weight: 800; font-size: 21px; color: #2B2118;">مهمة جديدة</div>
+            <div style="font-size: 13.5px; color: #9A8A73; font-weight: 500;">يبدأ المؤقّت تلقائيًا عند بدء التنفيذ</div>
+          </div>
+          <div sc-camel-on-click="{{ closeModal }}" style="margin-inline-start: auto; width: 32px; height: 32px; border-radius: 999px; background: #FFEFD6; color: #9A8A73; display: grid; place-items: center; font-weight: 700; cursor: pointer;">✕</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-weight: 700; font-size: 14.5px; color: #2B2118;">عنوان المهمة</label>
+          <input value="{{ formTitle }}" sc-camel-on-change="{{ onFormTitle }}" placeholder="مثال: تجهيز عرض العميل" style="font-size: 16px; font-weight: 600; color: #2B2118; background: #FFF7EC; border: 2px solid {{ titleBorder }}; border-radius: 14px; padding: 12px 16px; outline: none;">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <label style="font-weight: 700; font-size: 14.5px; color: #2B2118;">وصف المهمة</label>
+          <textarea value="{{ formDesc }}" sc-camel-on-change="{{ onFormDesc }}" rows="3" placeholder="اشرح المطلوب حتى يقيّمك زميلك بعدل ⭐" style="font-size: 15px; font-weight: 500; color: #2B2118; background: #FFF7EC; border: 2px solid #FFE3B3; border-radius: 14px; padding: 12px 16px; outline: none; resize: none;"></textarea>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <label style="font-weight: 700; font-size: 14.5px; color: #2B2118;">التصنيف</label>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">{{ categoryChips }}</div>
+        </div>
+        <div style="display: flex; gap: 12px; margin-top: 4px;">
+          <div sc-camel-on-click="{{ createTask }}" style="flex: 1; text-align: center; background: #1FB6A6; color: #FFF; font-weight: 800; font-size: 16px; padding: 13px; border-radius: 999px; box-shadow: 0 3px 0 #148F82; cursor: pointer;">▶ إنشاء وبدء المؤقّت</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script="">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const now = Date.now();
+    this.users = [
+      { id: 'sara', name: 'سارة', initial: 'س', color: '#1FB6A6' },
+      { id: 'ahmed', name: 'أحمد', initial: 'أ', color: '#FF9F43' },
+      { id: 'noura', name: 'نورة', initial: 'ن', color: '#8B5CF6' },
+      { id: 'khaled', name: 'خالد', initial: 'خ', color: '#FF6B57' },
+      { id: 'mhd', name: 'محمد', initial: 'م', color: '#3D9BE9' }
+    ];
+    this.state = {
+      view: 'tasks', filter: 'all', modalOpen: false, toast: '',
+      formTitle: '', formDesc: '', formCat: 'تصميم', titleError: false,
+      tick: 0,
+      ratings: {},
+      tasks: [
+        { id: 1, title: 'تجهيز عرض العميل الجديد', desc: '', cat: 'مبيعات', owner: 'ahmed', status: 'running', startedAt: now - 3765000 },
+        { id: 2, title: 'تصميم صفحة الهبوط', desc: 'مع نسخة الجوال وقسم الأسئلة الشائعة', cat: 'تصميم', owner: 'noura', status: 'review', elapsedMs: 9600000 },
+        { id: 3, title: 'تحديث قائمة العملاء', desc: '', cat: 'إداري', owner: 'sara', status: 'review', elapsedMs: 2520000 },
+        { id: 4, title: 'مراجعة تقرير المبيعات', desc: '', cat: 'مبيعات', owner: 'khaled', status: 'done', elapsedMs: 4500000, stars: 4, ratedBy: 'محمد' },
+        { id: 5, title: 'حملة السوشيال ميديا', desc: '', cat: 'تصميم', owner: 'sara', status: 'done', elapsedMs: 3300000, stars: 5, ratedBy: 'أحمد' },
+        { id: 6, title: 'إعداد اجتماع الربع', desc: '', cat: 'إداري', owner: 'mhd', status: 'done', elapsedMs: 5400000, stars: 4, ratedBy: 'سارة' }
+      ],
+      basePoints: { sara: 118, ahmed: 117, noura: 98, khaled: 68, mhd: 56 }
+    };
+  }
+
+  componentDidMount() { this.timer = setInterval(() => this.setState(s => ({ tick: s.tick + 1 })), 1000); }
+  componentWillUnmount() { clearInterval(this.timer); }
+
+  fmt(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+    const p = n => String(n).padStart(2, '0');
+    return `${p(h)}:${p(m)}:${p(s)}`;
+  }
+  fmtDur(ms) {
+    const total = Math.floor(ms / 60000);
+    const h = Math.floor(total / 60), m = total % 60;
+    return h > 0 ? `${h}س ${m}د` : `${m}د`;
+  }
+  user(id) { return this.users.find(u => u.id === id); }
+  starsStr(n) { return '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n); }
+
+  points(uid) {
+    let pts = this.state.basePoints[uid] || 0;
+    this.state.tasks.forEach(t => { if (t.owner === uid && t.status === 'done' && t.stars) pts += t.stars * 2; });
+    return pts;
+  }
+
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => this.setState({ toast: '' }), 2600);
+  }
+
+  finishTask(id) {
+    this.setState(s => ({
+      tasks: s.tasks.map(t => t.id === id ? { ...t, status: 'review', elapsedMs: Date.now() - t.startedAt } : t)
+    }));
+    this.showToast('🎉 أُنهيت المهمة — بانتظار تقييم زميل');
+  }
+
+  submitRating(id) {
+    const stars = this.state.ratings[id] || 0;
+    if (!stars) { this.showToast('اختر عدد النجوم أولًا ⭐'); return; }
+    this.setState(s => ({
+      tasks: s.tasks.map(t => t.id === id ? { ...t, status: 'done', stars, ratedBy: 'سارة' } : t)
+    }));
+    this.showToast(`⭐ منحت ${stars} نجوم (+${stars * 2} نقاط)`);
+  }
+
+  createTask() {
+    const title = this.state.formTitle.trim();
+    if (!title) { this.setState({ titleError: true }); this.showToast('اكتب عنوان المهمة أولًا ✏️'); return; }
+    const t = { id: Date.now(), title, desc: this.state.formDesc.trim(), cat: this.state.formCat, owner: 'sara', status: 'running', startedAt: Date.now() };
+    this.setState(s => ({ tasks: [t, ...s.tasks], modalOpen: false, formTitle: '', formDesc: '', titleError: false, filter: 'all' }));
+    this.showToast('▶ بدأ المؤقّت — بالتوفيق!');
+  }
+
+  starEls(id) {
+    const val = this.state.ratings[id] || 0;
+    return [1, 2, 3, 4, 5].map(i =>
+      React.createElement('span', {
+        key: i,
+        onClick: () => this.setState(s => ({ ratings: { ...s.ratings, [id]: i } })),
+        style: { cursor: 'pointer', color: i <= val ? '#F2C94C' : '#E4DCCB', userSelect: 'none' }
+      }, '★')
+    );
+  }
+
+  renderVals() {
+    const s = this.state;
+    const me = 'sara';
+    const labels = ['', 'يحتاج تحسين', 'مقبول', 'جيد 👍', 'ممتاز! 👏', 'أسطوري! 🤩'];
+
+    const tab = v => s.view === v;
+    const tabBg = v => tab(v) ? '#2B2118' : 'transparent';
+    const tabFg = v => tab(v) ? '#FFFFFF' : '#7A6A55';
+    const fSel = f => s.filter === f;
+    const fBg = f => fSel(f) ? '#2B2118' : '#FFFFFF';
+    const fFg = f => fSel(f) ? '#FFFFFF' : '#7A6A55';
+    const fBr = f => fSel(f) ? '#2B2118' : '#FFE3B3';
+
+    const tasks = s.tasks.filter(t => {
+      if (s.filter === 'run') return t.status === 'running';
+      if (s.filter === 'rev') return t.status === 'review';
+      if (s.filter === 'done') return t.status === 'done';
+      return true;
+    });
+
+    const visibleTasks = tasks.map(t => {
+      const u = this.user(t.owner);
+      const isMine = t.owner === me;
+      const isReviewMine = t.status === 'review' && !isMine;
+      let meta = u.name;
+      if (t.status === 'running') meta = `${u.name} · جارٍ التنفيذ`;
+      if (t.status === 'review') meta = `${u.name} · أنهاها في ${this.fmtDur(t.elapsedMs)}`;
+      if (t.status === 'done') meta = `${u.name} · ${this.fmtDur(t.elapsedMs)} · قيّمها ${t.ratedBy}`;
+      return {
+        title: t.title, desc: t.desc, meta,
+        initial: u.initial, color: u.color,
+        border: isReviewMine ? '#C9B8F5' : '#FFE3B3',
+        isRunning: t.status === 'running',
+        canFinish: t.status === 'running' && isMine,
+        isDone: t.status === 'done',
+        isReviewMine,
+        isReviewOthers: t.status === 'review' && isMine,
+        timer: t.status === 'running' ? this.fmt(Date.now() - t.startedAt) : '',
+        doneStars: t.stars ? this.starsStr(t.stars) : '',
+        points: t.stars ? t.stars * 2 : 0,
+        starEls: this.starEls(t.id),
+        ratingLabel: labels[s.ratings[t.id] || 0] || '',
+        submitBg: (s.ratings[t.id] || 0) ? '#8B5CF6' : '#C9B8F5',
+        onFinish: () => this.finishTask(t.id),
+        onSubmit: () => this.submitRating(t.id)
+      };
+    });
+
+    const doneTasks = s.tasks.filter(t => t.status === 'done');
+    const runCount = s.tasks.filter(t => t.status === 'running').length;
+    const revCount = s.tasks.filter(t => t.status === 'review').length;
+    const teamAvg = doneTasks.length ? (doneTasks.reduce((a, t) => a + t.stars, 0) / doneTasks.length).toFixed(1) : '—';
+
+    const stats = this.users.map(u => {
+      const mine = doneTasks.filter(t => t.owner === u.id);
+      const avg = mine.length ? (mine.reduce((a, t) => a + t.stars, 0) / mine.length).toFixed(1) : '—';
+      const avgTime = mine.length ? mine.reduce((a, t) => a + t.elapsedMs, 0) / mine.length : Infinity;
+      return { ...u, count: mine.length, avg, avgTime, pts: this.points(u.id) };
+    });
+    const maxCount = Math.max(1, ...stats.map(m => m.count));
+    const memberStats = stats.slice().sort((a, b) => b.count - a.count).map(m => ({ ...m, pct: Math.round(m.count / maxCount * 100) + '%' }));
+    const fastest = stats.filter(m => m.count > 0).sort((a, b) => a.avgTime - b.avgTime)[0] || stats[0];
+
+    const sorted = stats.slice().sort((a, b) => b.pts - a.pts);
+    const rankColors = ['#F2C94C', '#C9C0B4', '#D8956B'];
+    const miniLeaders = sorted.slice(0, 3).map((m, i) => ({ rank: i + 1, name: m.id === me ? 'أنت' : m.name, pts: m.pts, rankColor: rankColors[i] }));
+    const leaderRows = sorted.map((m, i) => ({
+      rank: i + 1, name: m.id === me ? `${m.name} (أنت)` : m.name, initial: m.initial, color: m.color,
+      tasks: m.count, avg: m.avg, pts: m.pts, bg: m.id === me ? '#FFFBF0' : '#FFFFFF'
+    }));
+
+    const myDoneTasks = doneTasks.filter(t => t.owner === me);
+    const myAvg = myDoneTasks.length ? (myDoneTasks.reduce((a, t) => a + t.stars, 0) / myDoneTasks.length).toFixed(1) : '—';
+    const myTime = myDoneTasks.length ? this.fmtDur(myDoneTasks.reduce((a, t) => a + t.elapsedMs, 0) / myDoneTasks.length) : '—';
+
+    const cats = ['تصميم', 'مبيعات', 'تطوير', 'إداري'];
+    const catIcons = { 'تصميم': '🎨', 'مبيعات': '📈', 'تطوير': '💻', 'إداري': '📝' };
+    const categoryChips = cats.map(c => {
+      const sel = s.formCat === c;
+      return React.createElement('div', {
+        key: c,
+        onClick: () => this.setState({ formCat: c }),
+        style: {
+          padding: '7px 16px', borderRadius: '999px', cursor: 'pointer', fontWeight: sel ? 700 : 600, fontSize: '14px',
+          background: sel ? '#FF6B57' : '#FFF7EC', color: sel ? '#FFF' : '#7A6A55',
+          border: sel ? '2px solid #FF6B57' : '2px solid #FFE3B3',
+          boxShadow: sel ? '0 3px 0 #E04B38' : 'none'
+        }
+      }, `${catIcons[c]} ${c}`);
+    });
+
+    return {
+      showTasks: s.view === 'tasks', showDash: s.view === 'dash', showLeaders: s.view === 'leaders', showProfile: s.view === 'profile',
+      goTasks: () => this.setState({ view: 'tasks' }),
+      goDash: () => this.setState({ view: 'dash' }),
+      goLeaders: () => this.setState({ view: 'leaders' }),
+      goProfile: () => this.setState({ view: 'profile' }),
+      tabTasksBg: tabBg('tasks'), tabTasksFg: tabFg('tasks'),
+      tabDashBg: tabBg('dash'), tabDashFg: tabFg('dash'),
+      tabLeadersBg: tabBg('leaders'), tabLeadersFg: tabFg('leaders'),
+      tabProfileBg: tabBg('profile'), tabProfileFg: tabFg('profile'),
+      filterAll: () => this.setState({ filter: 'all' }), filterRun: () => this.setState({ filter: 'run' }),
+      filterRev: () => this.setState({ filter: 'rev' }), filterDone: () => this.setState({ filter: 'done' }),
+      fAllBg: fBg('all'), fAllFg: fFg('all'), fAllBr: fBr('all'),
+      fRunBg: fBg('run'), fRunFg: fFg('run'), fRunBr: fBr('run'),
+      fRevBg: fBg('rev'), fRevFg: fFg('rev'), fRevBr: fBr('rev'),
+      fDoneBg: fBg('done'), fDoneFg: fFg('done'), fDoneBr: fBr('done'),
+      visibleTasks, emptyList: visibleTasks.length === 0,
+      toast: s.toast,
+      myPoints: this.points(me),
+      doneCount: doneTasks.length, totalCount: s.tasks.length,
+      donePct: Math.round(doneTasks.length / Math.max(1, s.tasks.length) * 100) + '%',
+      runCount, revCount, teamAvg,
+      memberStats, miniLeaders, leaderRows,
+      fastName: fastest.name, fastInitial: fastest.initial, fastColor: fastest.color,
+      fastTime: fastest.avgTime !== Infinity ? this.fmtDur(fastest.avgTime) : '—',
+      p1: sorted[0], p2: sorted[1], p3: sorted[2],
+      myDone: myDoneTasks.length, myAvg, myTime,
+      myTasks: myDoneTasks.map(t => ({ title: t.title, time: this.fmtDur(t.elapsedMs), stars: this.starsStr(t.stars) })),
+      modalOpen: s.modalOpen,
+      openModal: () => this.setState({ modalOpen: true }),
+      closeModal: () => this.setState({ modalOpen: false, titleError: false }),
+      stopProp: e => e.stopPropagation(),
+      formTitle: s.formTitle, formDesc: s.formDesc,
+      onFormTitle: e => this.setState({ formTitle: e.target.value, titleError: false }),
+      onFormDesc: e => this.setState({ formDesc: e.target.value }),
+      titleBorder: s.titleError ? '#FF6B57' : '#FFE3B3',
+      categoryChips,
+      createTask: () => this.createTask()
+    };
+  }
+}
+</script>
+
+
+</body></html>

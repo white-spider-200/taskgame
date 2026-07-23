@@ -1,0 +1,258 @@
+import type { LeaderRow, MemberStat } from "./types";
+
+type Props = {
+  p1: MemberStat | undefined;
+  p2: MemberStat | undefined;
+  p3: MemberStat | undefined;
+  leaderRows: LeaderRow[];
+};
+
+export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
+  return (
+        <div
+          style={{
+            padding: "24px 32px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 18,
+            flex: 1,
+            maxWidth: 680,
+            margin: "0 auto",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: 24,
+              fontWeight: 800,
+              color: "#2B2118",
+            }}
+          >
+            🏆 المتصدرون
+          </h2>
+          {p1 && p2 && p3 ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "center",
+                gap: 14,
+                paddingTop: 18,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 999,
+                    background: p3.color,
+                    color: "#FFF",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    fontSize: 20,
+                    border: "3px solid #FFF",
+                  }}
+                >
+                  {p3.initial}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#2B2118" }}>
+                  {p3.name.split(" ")[0]}
+                </div>
+                <div
+                  style={{
+                    width: 90,
+                    height: 64,
+                    background: "#E8C39A",
+                    borderRadius: "14px 14px 0 0",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 800,
+                    fontSize: 20,
+                    color: "#7A5A2E",
+                  }}
+                >
+                  3
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <div style={{ fontSize: 26 }}>👑</div>
+                <div
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 999,
+                    background: p1.color,
+                    color: "#FFF",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    fontSize: 23,
+                    border: "3px solid #F2C94C",
+                    boxShadow: "0 0 0 3px #FFF",
+                  }}
+                >
+                  {p1.initial}
+                </div>
+                <div
+                  style={{ fontWeight: 800, fontSize: 15, color: "#2B2118" }}
+                >
+                  {p1.name.split(" ")[0]} · {p1.pts} ⭐
+                </div>
+                <div
+                  style={{
+                    width: 100,
+                    height: 96,
+                    background: "#F2C94C",
+                    borderRadius: "14px 14px 0 0",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 800,
+                    fontSize: 26,
+                    color: "#7A5A00",
+                  }}
+                >
+                  1
+                </div>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <div
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 999,
+                    background: p2.color,
+                    color: "#FFF",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    fontSize: 20,
+                    border: "3px solid #FFF",
+                  }}
+                >
+                  {p2.initial}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 14, color: "#2B2118" }}>
+                  {p2.name.split(" ")[0]}
+                </div>
+                <div
+                  style={{
+                    width: 90,
+                    height: 78,
+                    background: "#D6D1C7",
+                    borderRadius: "14px 14px 0 0",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 800,
+                    fontSize: 20,
+                    color: "#6B6558",
+                  }}
+                >
+                  2
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <div
+            style={{
+              background: "#FFF",
+              border: "2px solid #FFE3B3",
+              borderRadius: 18,
+              overflow: "hidden",
+            }}
+          >
+            {leaderRows.map((l) => (
+              <div
+                key={l.rank}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "12px 18px",
+                  borderBottom: "1px solid #FFF3DE",
+                  background: l.bg,
+                }}
+              >
+                <div
+                  style={{
+                    width: 26,
+                    fontWeight: 800,
+                    fontSize: 15,
+                    color: "#9A8A73",
+                  }}
+                >
+                  {l.rank}
+                </div>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 999,
+                    background: l.color,
+                    color: "#FFF",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 700,
+                    fontSize: 15,
+                  }}
+                >
+                  {l.initial}
+                </div>
+                <div
+                  style={{
+                    flex: 1,
+                    fontWeight: 700,
+                    fontSize: 15,
+                    color: "#2B2118",
+                  }}
+                >
+                  {l.name}
+                </div>
+                <div
+                  style={{ fontSize: 13, color: "#9A8A73", fontWeight: 600 }}
+                >
+                  {l.tasks} مهمة · {l.avg} ★
+                </div>
+                <div
+                  style={{
+                    background: "#FFE9A8",
+                    border: "2px solid #F2C94C",
+                    color: "#7A5A00",
+                    fontWeight: 800,
+                    fontSize: 13.5,
+                    padding: "4px 12px",
+                    borderRadius: 999,
+                  }}
+                >
+                  {l.pts} ⭐
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+}

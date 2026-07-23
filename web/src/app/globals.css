@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+:root {
+  --cream: #fff7ec;
+  --coral: #ff6b57;
+  --coral-deep: #e04b38;
+  --ink: #2b2118;
+  --muted: #9a8a73;
+  --border: #ffe3b3;
+  --teal: #1fb6a6;
+  --gold: #f2c94c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "Baloo Bhaijaan 2", sans-serif;
+}
+
+a {
+  color: var(--coral);
+}
+
+a:hover {
+  color: var(--coral-deep);
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+@media (max-width: 900px) {
+  .playground-tasks-grid,
+  .playground-dash-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .playground-stat-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
