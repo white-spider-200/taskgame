@@ -45,6 +45,13 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     return () => clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, 5000);
+    return () => clearInterval(id);
+  }, [router]);
+
   function showToast(msg: string) {
     setToast(msg);
     window.setTimeout(() => setToast(""), 2600);
