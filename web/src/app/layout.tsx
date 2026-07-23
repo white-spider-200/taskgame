@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "ملعب المهام",
   description: "مهام الفريق، المؤقّت، والتقييم بين الزملاء",
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/logo.png" }],
+  },
 };
 
 export default function RootLayout({

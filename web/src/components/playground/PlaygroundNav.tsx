@@ -1,4 +1,5 @@
 import { logoutAction } from "@/app/actions";
+import { Logo } from "@/components/Logo";
 import type { View } from "./types";
 
 type Props = {
@@ -40,23 +41,7 @@ export function PlaygroundNav({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 12,
-              background: "#FF6B57",
-              display: "grid",
-              placeItems: "center",
-              color: "#FFF",
-              fontWeight: 800,
-              fontSize: 20,
-              transform: "rotate(-6deg)",
-              boxShadow: "0 3px 0 #E04B38",
-            }}
-          >
-            م
-          </div>
+          <Logo size={38} />
           <div>
             <div style={{ fontWeight: 800, fontSize: 19, color: "#2B2118" }}>
               ملعب المهام

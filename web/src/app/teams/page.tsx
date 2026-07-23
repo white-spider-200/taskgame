@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { logoutAction } from "@/app/actions";
 import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { Logo } from "@/components/Logo";
 import { TeamForms } from "@/components/TeamForms";
 import Link from "next/link";
 
@@ -33,23 +34,7 @@ export default async function TeamsPage() {
             marginBottom: 28,
           }}
         >
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              background: "#FF6B57",
-              color: "#FFF",
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 800,
-              fontSize: 22,
-              transform: "rotate(-6deg)",
-              boxShadow: "0 3px 0 #E04B38",
-            }}
-          >
-            م
-          </div>
+          <Logo size={42} />
           <div style={{ flex: 1 }}>
             <div style={{ fontWeight: 800, fontSize: 24, color: "#2B2118" }}>فرقك</div>
             <div style={{ color: "#9A8A73", fontWeight: 600, fontSize: 14 }}>

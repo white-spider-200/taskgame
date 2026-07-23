@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 
 export function AuthShell({
   title,
@@ -31,23 +32,7 @@ export function AuthShell({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-          <div
-            style={{
-              width: 42,
-              height: 42,
-              borderRadius: 12,
-              background: "#FF6B57",
-              color: "#FFF",
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 800,
-              fontSize: 22,
-              transform: "rotate(-6deg)",
-              boxShadow: "0 3px 0 #E04B38",
-            }}
-          >
-            م
-          </div>
+          <Logo size={42} />
           <div>
             <div style={{ fontWeight: 800, fontSize: 22, color: "#2B2118" }}>{title}</div>
             <div style={{ fontSize: 13.5, color: "#9A8A73", fontWeight: 500 }}>{subtitle}</div>
