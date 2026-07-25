@@ -46,6 +46,21 @@ export function FileDropZone({
     if (f) onFileChange(f);
   }
 
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const item = Array.from(items).find((i) => i.type.startsWith("image/"));
+      const f = item?.getAsFile();
+      if (f) {
+        e.preventDefault();
+        onFileChange(f);
+      }
+    }
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [onFileChange]);
+
   return (
     <div
       className={`filedrop-zone${dragging ? " dragging" : ""}`}
@@ -115,7 +130,7 @@ export function FileDropZone({
               marginTop: 8,
             }}
           >
-            {fileLabel} — اضغط أو اسحب صورة/فيديو هنا للاستبدال
+            {fileLabel} — اضغط أو اسحب أو الصق (Ctrl+V) للاستبدال
           </div>
         </div>
       ) : (
@@ -131,7 +146,7 @@ export function FileDropZone({
               marginTop: 4,
             }}
           >
-            اسحب صورة أو فيديو هنا أو اضغط للاختيار
+            اسحب صورة أو فيديو هنا، اضغط للاختيار، أو الصق (Ctrl+V)
           </div>
         </div>
       )}
