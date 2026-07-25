@@ -72,7 +72,9 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
   const doneTasks = tasks.filter((t) => t.status === "done");
   const runCount = tasks.filter((t) => t.status === "running").length;
-  const revCount = tasks.filter((t) => t.status === "review").length;
+  const revCount = tasks.filter(
+    (t) => t.status !== "running" && t.ownerId !== me.id && t.myRating == null,
+  ).length;
   const teamAvg = doneTasks.length
     ? (
         doneTasks.reduce((a, t) => a + (t.stars || 0), 0) / doneTasks.length
@@ -143,7 +145,8 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
   const visibleTasks = tasks.filter((t) => {
     if (filter === "run") return t.status === "running";
-    if (filter === "rev") return t.status === "review";
+    if (filter === "rev")
+      return t.status !== "running" && t.ownerId !== me.id && t.myRating == null;
     return t.status === "done";
   });
 
