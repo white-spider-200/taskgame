@@ -228,7 +228,7 @@ export function ProfileView({
                     {fmtDur(mt.elapsedMs || 0)}
                   </span>
                   <span style={{ color: "#B87A00", letterSpacing: 1 }}>
-                    {starsStr(mt.stars || 0)}
+                    {starsStr(Math.round(mt.stars || 0))}
                   </span>
                 </div>
               ))}

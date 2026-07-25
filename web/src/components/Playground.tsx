@@ -153,7 +153,9 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     if (t.status === "running") return `${name} · جارٍ التنفيذ`;
     if (t.status === "review")
       return `${name} · أنهاها في ${fmtDur(t.elapsedMs || 0)}`;
-    return `${name} · ${fmtDur(t.elapsedMs || 0)} · قيّمها ${t.ratedBy}`;
+    const raters =
+      t.ratingsCount === 1 ? "شخص واحد" : `${t.ratingsCount} أشخاص`;
+    return `${name} · ${fmtDur(t.elapsedMs || 0)} · قيّمه ${raters}`;
   }
 
   function openFinishForm(id: string) {
@@ -208,26 +210,33 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   }
 
   function onRate(id: string) {
-    const stars = ratings[id] || 0;
+    const task = tasks.find((t) => t.id === id);
+    const stars = ratings[id] || task?.myRating || 0;
     if (!stars) {
       showToast("اختر عدد النجوم أولًا ⭐");
       return;
     }
     startTransition(async () => {
       const res = await rateTaskAction(id, stars);
-      if (res?.error) {
-        showToast(res.error);
+      if (!res || !("ok" in res) || !res.ok) {
+        showToast(res?.error || "تعذّر إرسال التقييم");
         return;
       }
       setData((d) => ({
         ...d,
         tasks: d.tasks.map((t) =>
           t.id === id
-            ? { ...t, status: "done", stars, ratedBy: me.name }
+            ? {
+                ...t,
+                status: "done",
+                stars: res.stars,
+                ratingsCount: res.count,
+                myRating: stars,
+              }
             : t,
         ),
       }));
-      showToast(`⭐ منحت ${stars} نجوم (+${stars * 2} نقاط)`);
+      showToast(`⭐ تم إرسال تقييمك (${stars} نجوم)`);
       router.refresh();
     });
   }

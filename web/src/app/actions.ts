@@ -251,30 +251,35 @@ export async function rateTaskAction(taskId: string, stars: number) {
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { rating: true },
   });
   if (!task) return { error: "المهمة غير موجودة" };
-  if (task.status !== "review") return { error: "المهمة ليست بانتظار التقييم" };
+  if (task.status === "running") return { error: "المهمة ليست بانتظار التقييم" };
   if (task.ownerId === user.id) return { error: "لا يمكنك تقييم مهمتك" };
-  if (task.rating) return { error: "تم تقييم المهمة مسبقًا" };
 
   const membership = await prisma.membership.findUnique({
     where: { userId_teamId: { userId: user.id, teamId: task.teamId } },
   });
   if (!membership) return { error: "لست عضوًا في هذا الفريق" };
 
-  await prisma.$transaction([
-    prisma.rating.create({
-      data: { taskId, raterId: user.id, stars },
-    }),
-    prisma.task.update({
+  await prisma.rating.upsert({
+    where: { taskId_raterId: { taskId, raterId: user.id } },
+    create: { taskId, raterId: user.id, stars },
+    update: { stars },
+  });
+
+  if (task.status === "review") {
+    await prisma.task.update({
       where: { id: taskId },
       data: { status: "done" },
-    }),
-  ]);
+    });
+  }
+
+  const ratings = await prisma.rating.findMany({ where: { taskId } });
+  const avgStars =
+    ratings.reduce((a, r) => a + r.stars, 0) / ratings.length;
 
   revalidatePath(`/t/${task.teamId}`);
-  return { ok: true as const, stars };
+  return { ok: true as const, stars: avgStars, count: ratings.length };
 }
 
 export async function loadTeamAction(teamId: string) {

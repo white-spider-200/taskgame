@@ -24,7 +24,8 @@ export type TaskDTO = {
   elapsedMs: number | null;
   ownerId: string;
   stars: number | null;
-  ratedBy: string | null;
+  ratingsCount: number;
+  myRating: number | null;
   submission: SubmissionDTO | null;
 };
 
@@ -42,7 +43,7 @@ function pointsForMember(
   let pts = member.basePoints;
   for (const t of tasks) {
     if (t.ownerId === member.id && t.status === "done" && t.stars) {
-      pts += t.stars * 2;
+      pts += Math.round(t.stars * 2);
     }
   }
   return pts;
@@ -76,7 +77,7 @@ export async function getTeamPayload(
   const tasks = await prisma.task.findMany({
     where: { teamId: membership.teamId },
     include: {
-      rating: { include: { rater: true } },
+      ratings: { include: { rater: true } },
       owner: true,
       submission: true,
     },
@@ -100,8 +101,11 @@ export async function getTeamPayload(
     startedAt: t.startedAt.toISOString(),
     elapsedMs: t.elapsedMs,
     ownerId: t.ownerId,
-    stars: t.rating?.stars ?? null,
-    ratedBy: t.rating?.rater.name ?? null,
+    stars: t.ratings.length
+      ? t.ratings.reduce((a, r) => a + r.stars, 0) / t.ratings.length
+      : null,
+    ratingsCount: t.ratings.length,
+    myRating: t.ratings.find((r) => r.raterId === userId)?.stars ?? null,
     submission: t.submission
       ? {
           type: t.submission.type as SubmissionDTO["type"],

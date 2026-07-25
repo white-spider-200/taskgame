@@ -155,8 +155,9 @@ export function TasksView({
             {visibleTasks.map((t) => {
               const u = memberMap.get(t.ownerId);
               const isMine = t.ownerId === me.id;
-              const isReviewMine = t.status === "review" && !isMine;
-              const border = isReviewMine ? "#C9B8F5" : "#FFE3B3";
+              const canRate = !isMine && t.status !== "running";
+              const needsMyRating = canRate && t.myRating == null;
+              const border = needsMyRating ? "#C9B8F5" : "#FFE3B3";
               return (
                 <div
                   key={t.id}
@@ -172,7 +173,7 @@ export function TasksView({
                     animation: "pop .25s ease",
                   }}
                 >
-                  {isReviewMine ? (
+                  {needsMyRating ? (
                     <div
                       style={{
                         position: "absolute",
@@ -294,7 +295,19 @@ export function TasksView({
                             color: "#B87A00",
                           }}
                         >
-                          {starsStr(t.stars || 0)}
+                          {starsStr(Math.round(t.stars || 0))}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            color: "#9A8A73",
+                          }}
+                        >
+                          {(t.stars || 0).toFixed(1)} ·{" "}
+                          {t.ratingsCount === 1
+                            ? "تقييم واحد"
+                            : `${t.ratingsCount} تقييمات`}
                         </div>
                         <div
                           style={{
@@ -307,7 +320,7 @@ export function TasksView({
                             borderRadius: 999,
                           }}
                         >
-                          +{(t.stars || 0) * 2} نقاط
+                          +{Math.round((t.stars || 0) * 2)} نقاط
                         </div>
                       </>
                     ) : null}
@@ -536,7 +549,7 @@ export function TasksView({
                     </div>
                   ) : null}
 
-                  {isReviewMine ? (
+                  {canRate ? (
                     <div
                       style={{
                         display: "flex",
@@ -555,7 +568,7 @@ export function TasksView({
                           color: "#5B3FA8",
                         }}
                       >
-                        قيّم العمل:
+                        {t.myRating == null ? "قيّم العمل:" : "تعديل تقييمك:"}
                       </div>
                       <div
                         style={{
@@ -574,7 +587,7 @@ export function TasksView({
                             style={{
                               cursor: "pointer",
                               color:
-                                i <= (ratings[t.id] || 0)
+                                i <= (ratings[t.id] ?? t.myRating ?? 0)
                                   ? "#F2C94C"
                                   : "#E4DCCB",
                               userSelect: "none",
@@ -591,14 +604,17 @@ export function TasksView({
                           color: "#8B5CF6",
                         }}
                       >
-                        {RATING_LABELS[ratings[t.id] || 0]}
+                        {RATING_LABELS[ratings[t.id] ?? t.myRating ?? 0]}
                       </div>
                       <button
                         type="button"
                         onClick={() => onRate(t.id)}
                         style={{
                           marginInlineStart: "auto",
-                          background: ratings[t.id] ? "#8B5CF6" : "#C9B8F5",
+                          background:
+                            ratings[t.id] ?? t.myRating
+                              ? "#8B5CF6"
+                              : "#C9B8F5",
                           color: "#FFF",
                           fontWeight: 700,
                           fontSize: 13.5,
@@ -610,7 +626,7 @@ export function TasksView({
                           fontFamily: "inherit",
                         }}
                       >
-                        إرسال التقييم
+                        {t.myRating == null ? "إرسال التقييم" : "تحديث التقييم"}
                       </button>
                     </div>
                   ) : null}

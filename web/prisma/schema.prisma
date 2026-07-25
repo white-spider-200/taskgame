@@ -63,7 +63,7 @@ model Task {
   updatedAt  DateTime  @updatedAt
   team       Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   owner      User         @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  rating     Rating?
+  ratings    Rating[]
   submission Submission?
 
   @@index([teamId, status])
@@ -85,12 +85,14 @@ model Submission {
 model Rating {
   id        String   @id @default(cuid())
   stars     Int
-  taskId    String   @unique
+  taskId    String
   raterId   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   rater     User     @relation("RatingsGiven", fields: [raterId], references: [id], onDelete: Cascade)
 
+  @@unique([taskId, raterId])
   @@index([raterId])
+  @@index([taskId])
 }
