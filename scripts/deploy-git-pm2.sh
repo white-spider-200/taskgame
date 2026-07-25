@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-# Run on the server, from the taskgame repo root.
+# Always run from the repo root, regardless of the caller's cwd.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 # Load web/.env.production if it exists
 if [ -f web/.env.production ]; then
   export $(grep -v '^#' web/.env.production | xargs)

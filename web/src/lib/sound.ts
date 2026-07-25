@@ -1,16 +1,33 @@
 let audioCtx: AudioContext | null = null;
 
+function getCtx(): AudioContext | null {
+  const Ctx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioCtx) audioCtx = new Ctx();
+  return audioCtx;
+}
+
+// Browsers only allow audio playback after a real user gesture on the page.
+// Without this, the first notification chime of a session can silently fail
+// if it fires before the user has clicked/tapped anything.
+if (typeof window !== "undefined") {
+  const unlock = () => {
+    const ctx = getCtx();
+    if (ctx && ctx.state === "suspended") void ctx.resume();
+  };
+  window.addEventListener("pointerdown", unlock, { once: true });
+  window.addEventListener("keydown", unlock, { once: true });
+}
+
 export function playNotificationSound() {
   if (typeof window === "undefined") return;
 
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!Ctx) return;
-    if (!audioCtx) audioCtx = new Ctx();
-    const ctx = audioCtx;
+    const ctx = getCtx();
+    if (!ctx) return;
     if (ctx.state === "suspended") void ctx.resume();
 
     const now = ctx.currentTime;
