@@ -148,6 +148,7 @@ export function TasksView({
               return (
                 <div
                   key={t.id}
+                  className="task-card"
                   style={{
                     background: "#FFF",
                     border: `2px solid ${border}`,

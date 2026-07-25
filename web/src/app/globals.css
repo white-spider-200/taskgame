@@ -81,6 +81,17 @@ button {
   transform: scale(1.05);
 }
 
+.task-card {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.task-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(43, 33, 24, 0.12);
+}
+
 @media (max-width: 900px) {
   .playground-tasks-grid,
   .playground-dash-grid {
