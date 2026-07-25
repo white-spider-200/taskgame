@@ -16,7 +16,7 @@ import {
   fmtTimer,
   starsStr,
 } from "@/lib/format";
-import { playNotificationSound } from "@/lib/sound";
+import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import type { TeamPayload } from "@/lib/team";
 import { Toast } from "./playground/Toast";
 
@@ -69,8 +69,9 @@ export function TaskDetail({
 
   void tick;
 
-  function showToast(msg: string) {
+  function showToast(msg: string, sound: ToastSoundType = "success") {
     setToast(msg);
+    playToastSound(sound);
     window.setTimeout(() => setToast(""), 2600);
   }
 
@@ -95,7 +96,7 @@ export function TaskDetail({
   function onFinishSubmit() {
     const text = proofText.trim();
     if (!text && !proofFile) {
-      showToast("أرفق نصًا أو صورة كإثبات للعمل");
+      showToast("أرفق نصًا أو صورة كإثبات للعمل", "error");
       return;
     }
     const fd = new FormData();
@@ -106,7 +107,7 @@ export function TaskDetail({
     startTransition(async () => {
       const res = await finishTaskAction(fd);
       if (res?.error) {
-        showToast(res.error);
+        showToast(res.error, "error");
         return;
       }
       if (!res || !("ok" in res) || !res.ok) return;
@@ -123,7 +124,7 @@ export function TaskDetail({
             : t,
         ),
       }));
-      showToast("🎉 أُنهيت المهمة — بانتظار تقييم زميل");
+      showToast("🎉 أُنهيت المهمة — بانتظار تقييم زميل", "finished");
       router.refresh();
     });
   }
@@ -137,7 +138,7 @@ export function TaskDetail({
   function onEditSubmit() {
     const text = editText.trim();
     if (!text && !editFile && !task?.submission?.fileUrl) {
-      showToast("أرفق نصًا أو صورة كإثبات للعمل");
+      showToast("أرفق نصًا أو صورة كإثبات للعمل", "error");
       return;
     }
     const fd = new FormData();
@@ -148,7 +149,7 @@ export function TaskDetail({
     startTransition(async () => {
       const res = await editSubmissionAction(fd);
       if (res?.error) {
-        showToast(res.error);
+        showToast(res.error, "error");
         return;
       }
       if (!res || !("ok" in res) || !res.ok) return;
@@ -167,13 +168,13 @@ export function TaskDetail({
   function onRate() {
     const stars = rating ?? task?.myRating ?? 0;
     if (!stars) {
-      showToast("اختر عدد النجوم أولًا ⭐");
+      showToast("اختر عدد النجوم أولًا ⭐", "error");
       return;
     }
     startTransition(async () => {
       const res = await rateTaskAction(taskId, stars);
       if (!res || !("ok" in res) || !res.ok) {
-        showToast(res?.error || "تعذّر إرسال التقييم");
+        showToast(res?.error || "تعذّر إرسال التقييم", "error");
         return;
       }
       setData((d) => ({
@@ -190,7 +191,7 @@ export function TaskDetail({
             : t,
         ),
       }));
-      showToast(`⭐ تم إرسال تقييمك (${stars} نجوم)`);
+      showToast(`⭐ تم إرسال تقييمك (${stars} نجوم)`, "rated");
       router.refresh();
     });
   }

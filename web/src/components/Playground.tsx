@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createTaskAction, rateTaskAction } from "@/app/actions";
 import { fmtDur } from "@/lib/format";
-import { playNotificationSound } from "@/lib/sound";
+import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
 import { CreateTaskModal } from "./playground/CreateTaskModal";
 import { DashboardView } from "./playground/DashboardView";
@@ -53,8 +53,9 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     return () => clearInterval(id);
   }, [router]);
 
-  function showToast(msg: string) {
+  function showToast(msg: string, sound: ToastSoundType = "success") {
     setToast(msg);
+    playToastSound(sound);
     window.setTimeout(() => setToast(""), 2600);
   }
 
@@ -163,13 +164,13 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     const task = tasks.find((t) => t.id === id);
     const stars = ratings[id] || task?.myRating || 0;
     if (!stars) {
-      showToast("اختر عدد النجوم أولًا ⭐");
+      showToast("اختر عدد النجوم أولًا ⭐", "error");
       return;
     }
     startTransition(async () => {
       const res = await rateTaskAction(id, stars);
       if (!res || !("ok" in res) || !res.ok) {
-        showToast(res?.error || "تعذّر إرسال التقييم");
+        showToast(res?.error || "تعذّر إرسال التقييم", "error");
         return;
       }
       setData((d) => ({
@@ -186,7 +187,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
             : t,
         ),
       }));
-      showToast(`⭐ تم إرسال تقييمك (${stars} نجوم)`);
+      showToast(`⭐ تم إرسال تقييمك (${stars} نجوم)`, "rated");
       router.refresh();
     });
   }
@@ -195,7 +196,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     const title = formTitle.trim();
     if (!title) {
       setTitleError(true);
-      showToast("اكتب عنوان المهمة أولًا ✏️");
+      showToast("اكتب عنوان المهمة أولًا ✏️", "error");
       return;
     }
     startTransition(async () => {
@@ -206,7 +207,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
         category: formCat,
       });
       if (res?.error) {
-        showToast(res.error);
+        showToast(res.error, "error");
         return;
       }
       setModalOpen(false);
@@ -214,7 +215,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       setFormDesc("");
       setTitleError(false);
       setFilter("run");
-      showToast("▶ بدأ المؤقّت — بالتوفيق!");
+      showToast("▶ بدأ المؤقّت — بالتوفيق!", "created");
       router.refresh();
     });
   }
