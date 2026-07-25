@@ -16,6 +16,7 @@ import {
   fmtTimer,
   starsStr,
 } from "@/lib/format";
+import { playNotificationSound } from "@/lib/sound";
 import type { TeamPayload } from "@/lib/team";
 import { Toast } from "./playground/Toast";
 
@@ -44,6 +45,13 @@ export function TaskDetail({
   const [, startTransition] = useTransition();
 
   useEffect(() => {
+    const myId = data.me.id;
+    const justSubmitted = initial.tasks.some((t) => {
+      if (t.ownerId === myId) return false;
+      const prev = data.tasks.find((p) => p.id === t.id);
+      return prev?.status === "running" && t.status === "review";
+    });
+    if (justSubmitted) playNotificationSound();
     setData(initial);
   }, [initial]);
 
