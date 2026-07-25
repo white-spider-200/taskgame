@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   RATING_LABELS,
   fmtTimer,
@@ -7,6 +8,7 @@ import type { TaskDTO, TeamMember } from "@/lib/team";
 import type { Filter, MiniLeader } from "./types";
 
 type Props = {
+  teamId: string;
   tasks: TaskDTO[];
   visibleTasks: TaskDTO[];
   doneTasks: TaskDTO[];
@@ -19,20 +21,13 @@ type Props = {
   onOpenModal: () => void;
   miniLeaders: MiniLeader[];
   taskMeta: (t: TaskDTO) => string;
-  finishingTaskId: string | null;
-  proofText: string;
-  proofFile: File | null;
-  onProofTextChange: (v: string) => void;
-  onProofFileChange: (f: File | null) => void;
-  onOpenFinishForm: (id: string) => void;
-  onCancelFinishForm: () => void;
-  onFinishSubmit: () => void;
   ratings: Record<string, number>;
   onSetRating: (taskId: string, stars: number) => void;
   onRate: (id: string) => void;
 };
 
 export function TasksView({
+  teamId,
   tasks,
   visibleTasks,
   doneTasks,
@@ -45,14 +40,6 @@ export function TasksView({
   onOpenModal,
   miniLeaders,
   taskMeta,
-  finishingTaskId,
-  proofText,
-  proofFile,
-  onProofTextChange,
-  onProofFileChange,
-  onOpenFinishForm,
-  onCancelFinishForm,
-  onFinishSubmit,
   ratings,
   onSetRating,
   onRate,
@@ -109,7 +96,6 @@ export function TasksView({
               >
                 {(
                   [
-                    ["all", "الكل"],
                     ["run", "قيد التنفيذ"],
                     ["rev", "للتقييم"],
                     ["done", "منجزة"],
@@ -215,13 +201,15 @@ export function TasksView({
                     >
                       {u?.initial || "؟"}
                     </div>
-                    <div
+                    <Link
+                      href={`/t/${teamId}/task/${t.id}`}
                       style={{
                         display: "flex",
                         flexDirection: "column",
                         gap: 2,
                         flex: 1,
                         minWidth: 0,
+                        textDecoration: "none",
                       }}
                     >
                       <div
@@ -242,7 +230,7 @@ export function TasksView({
                       >
                         {taskMeta(t)}
                       </div>
-                    </div>
+                    </Link>
 
                     {t.status === "running" ? (
                       <div
@@ -266,9 +254,8 @@ export function TasksView({
                     ) : null}
 
                     {t.status === "running" && isMine ? (
-                      <button
-                        type="button"
-                        onClick={() => onOpenFinishForm(t.id)}
+                      <Link
+                        href={`/t/${teamId}/task/${t.id}`}
                         style={{
                           background: "#1FB6A6",
                           color: "#FFF",
@@ -280,10 +267,12 @@ export function TasksView({
                           cursor: "pointer",
                           border: "none",
                           fontFamily: "inherit",
+                          textDecoration: "none",
+                          display: "inline-block",
                         }}
                       >
                         إنهاء ✓
-                      </button>
+                      </Link>
                     ) : null}
 
                     {t.status === "done" ? (
@@ -356,133 +345,6 @@ export function TasksView({
                     </div>
                   ) : null}
 
-                  {finishingTaskId === t.id ? (
-                    <div
-                      style={{
-                        marginInlineStart: 58,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
-                        background: "#F0FBFA",
-                        border: "2px solid #1FB6A6",
-                        borderRadius: 14,
-                        padding: "12px 14px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontWeight: 700,
-                          fontSize: 14,
-                          color: "#0E8A7D",
-                        }}
-                      >
-                        أرفق إثبات العمل (نص و/أو صورة)
-                      </div>
-                      <textarea
-                        value={proofText}
-                        onChange={(e) => onProofTextChange(e.target.value)}
-                        placeholder="ماذا أنجزت؟ اكتب وصفًا مختصرًا..."
-                        rows={3}
-                        style={{
-                          width: "100%",
-                          resize: "vertical",
-                          border: "2px solid #B8E8E0",
-                          borderRadius: 10,
-                          padding: "10px 12px",
-                          fontFamily: "inherit",
-                          fontSize: 14,
-                          color: "#2B2118",
-                          background: "#FFF",
-                        }}
-                      />
-                      <label
-                        style={{
-                          display: "inline-block",
-                          background: "#1FB6A6",
-                          color: "#FFF",
-                          fontWeight: 700,
-                          fontSize: 13.5,
-                          padding: "8px 20px",
-                          borderRadius: 999,
-                          cursor: "pointer",
-                          fontFamily: "inherit",
-                          border: "none",
-                          boxShadow: "0 2px 0 #148F82",
-                          marginTop: 2,
-                          marginBottom: 2,
-                          transition: "background 0.15s, color 0.15s, box-shadow 0.15s",
-                        }}
-                        tabIndex={0}
-                      >
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
-                          onChange={(e) => onProofFileChange(e.target.files?.[0] ?? null)}
-                          style={{
-                            display: "none",
-                          }}
-                        />
-                        تحميل صورة أو فيديو إثبات
-                      </label>
-                
-                      {proofFile ? (
-                        <div
-                          style={{
-                            fontSize: 12.5,
-                            color: "#0E8A7D",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {proofFile.name}
-                        </div>
-                      ) : null}
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={onCancelFinishForm}
-                          style={{
-                            background: "#FFF",
-                            color: "#7A6A55",
-                            fontWeight: 700,
-                            fontSize: 13.5,
-                            padding: "7px 14px",
-                            borderRadius: 999,
-                            border: "2px solid #E4DCCB",
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          إلغاء
-                        </button>
-                        <button
-                          type="button"
-                          onClick={onFinishSubmit}
-                          style={{
-                            background: "#1FB6A6",
-                            color: "#FFF",
-                            fontWeight: 700,
-                            fontSize: 13.5,
-                            padding: "7px 16px",
-                            borderRadius: 999,
-                            boxShadow: "0 3px 0 #148F82",
-                            cursor: "pointer",
-                            border: "none",
-                            fontFamily: "inherit",
-                          }}
-                        >
-                          إرسال وإنهاء
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-
                   {t.submission &&
                   (t.status === "review" || t.status === "done") ? (
                     <div
@@ -499,12 +361,40 @@ export function TasksView({
                     >
                       <div
                         style={{
-                          fontWeight: 700,
-                          fontSize: 13,
-                          color: "#9A8A73",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
                         }}
                       >
-                        إثبات الإنجاز
+                        <div
+                          style={{
+                            fontWeight: 700,
+                            fontSize: 13,
+                            color: "#9A8A73",
+                            flex: 1,
+                          }}
+                        >
+                          إثبات الإنجاز
+                        </div>
+                        {isMine ? (
+                          <Link
+                            href={`/t/${teamId}/task/${t.id}`}
+                            style={{
+                              background: "#FFF",
+                              color: "#B87A00",
+                              fontWeight: 700,
+                              fontSize: 12.5,
+                              padding: "4px 12px",
+                              borderRadius: 999,
+                              border: "2px solid #F2C94C",
+                              cursor: "pointer",
+                              fontFamily: "inherit",
+                              textDecoration: "none",
+                            }}
+                          >
+                            تعديل ✏️
+                          </Link>
+                        ) : null}
                       </div>
                       {t.submission.text ? (
                         <div

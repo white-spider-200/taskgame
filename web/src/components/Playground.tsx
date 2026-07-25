@@ -2,11 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import {
-  createTaskAction,
-  finishTaskAction,
-  rateTaskAction,
-} from "@/app/actions";
+import { createTaskAction, rateTaskAction } from "@/app/actions";
 import { fmtDur } from "@/lib/format";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
 import { CreateTaskModal } from "./playground/CreateTaskModal";
@@ -22,14 +18,11 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
   const [view, setView] = useState<View>("tasks");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [filter, setFilter] = useState<Filter>("run");
   const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [tick, setTick] = useState(0);
   const [ratings, setRatings] = useState<Record<string, number>>({});
-  const [finishingTaskId, setFinishingTaskId] = useState<string | null>(null);
-  const [proofText, setProofText] = useState("");
-  const [proofFile, setProofFile] = useState<File | null>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formCat, setFormCat] = useState<string>("تصميم");
@@ -141,8 +134,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const visibleTasks = tasks.filter((t) => {
     if (filter === "run") return t.status === "running";
     if (filter === "rev") return t.status === "review";
-    if (filter === "done") return t.status === "done";
-    return true;
+    return t.status === "done";
   });
 
   void tick;
@@ -156,57 +148,6 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     const raters =
       t.ratingsCount === 1 ? "شخص واحد" : `${t.ratingsCount} أشخاص`;
     return `${name} · ${fmtDur(t.elapsedMs || 0)} · قيّمه ${raters}`;
-  }
-
-  function openFinishForm(id: string) {
-    setFinishingTaskId(id);
-    setProofText("");
-    setProofFile(null);
-  }
-
-  function cancelFinishForm() {
-    setFinishingTaskId(null);
-    setProofText("");
-    setProofFile(null);
-  }
-
-  function onFinishSubmit() {
-    if (!finishingTaskId) return;
-    const text = proofText.trim();
-    if (!text && !proofFile) {
-      showToast("أرفق نصًا أو صورة كإثبات للعمل");
-      return;
-    }
-    const taskId = finishingTaskId;
-    const fd = new FormData();
-    fd.set("taskId", taskId);
-    fd.set("text", text);
-    if (proofFile) fd.set("file", proofFile);
-
-    startTransition(async () => {
-      const res = await finishTaskAction(fd);
-      if (res?.error) {
-        showToast(res.error);
-        return;
-      }
-      if (!res || !("ok" in res) || !res.ok) return;
-      setData((d) => ({
-        ...d,
-        tasks: d.tasks.map((t) =>
-          t.id === taskId
-            ? {
-                ...t,
-                status: "review",
-                elapsedMs: res.elapsedMs,
-                submission: res.submission,
-              }
-            : t,
-        ),
-      }));
-      cancelFinishForm();
-      showToast("🎉 أُنهيت المهمة — بانتظار تقييم زميل");
-      router.refresh();
-    });
   }
 
   function onRate(id: string) {
@@ -263,7 +204,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       setFormTitle("");
       setFormDesc("");
       setTitleError(false);
-      setFilter("all");
+      setFilter("run");
       showToast("▶ بدأ المؤقّت — بالتوفيق!");
       router.refresh();
     });
@@ -295,6 +236,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
       {view === "tasks" ? (
         <TasksView
+          teamId={data.team.id}
           tasks={tasks}
           visibleTasks={visibleTasks}
           doneTasks={doneTasks}
@@ -307,14 +249,6 @@ export function Playground({ initial }: { initial: TeamPayload }) {
           onOpenModal={() => setModalOpen(true)}
           miniLeaders={miniLeaders}
           taskMeta={taskMeta}
-          finishingTaskId={finishingTaskId}
-          proofText={proofText}
-          proofFile={proofFile}
-          onProofTextChange={setProofText}
-          onProofFileChange={setProofFile}
-          onOpenFinishForm={openFinishForm}
-          onCancelFinishForm={cancelFinishForm}
-          onFinishSubmit={onFinishSubmit}
           ratings={ratings}
           onSetRating={(taskId, stars) =>
             setRatings((r) => ({ ...r, [taskId]: stars }))

@@ -12,6 +12,7 @@ export type SubmissionDTO = {
   type: "text" | "image" | "video" | "both";
   text: string;
   fileUrl: string | null;
+  fileName: string | null;
 };
 
 export type TaskDTO = {
@@ -111,6 +112,7 @@ export async function getTeamPayload(
           type: t.submission.type as SubmissionDTO["type"],
           text: t.submission.text,
           fileUrl: t.submission.fileUrl,
+          fileName: t.submission.fileName,
         }
       : null,
   }));

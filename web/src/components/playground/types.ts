@@ -1,7 +1,7 @@
 import type { TeamMember } from "@/lib/team";
 
 export type View = "tasks" | "dash" | "leaders" | "profile";
-export type Filter = "all" | "run" | "rev" | "done";
+export type Filter = "run" | "rev" | "done";
 
 export type MemberStat = TeamMember & {
   count: number;
