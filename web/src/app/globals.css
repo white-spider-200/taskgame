@@ -53,6 +53,34 @@ button {
   font-family: inherit;
 }
 
+.filedrop-zone {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.filedrop-zone:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(43, 33, 24, 0.1);
+}
+
+.filedrop-zone.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(43, 33, 24, 0.14);
+}
+
+.filedrop-media {
+  transition: transform 0.25s ease;
+  display: block;
+  margin: 0 auto;
+}
+
+.filedrop-zone:hover .filedrop-media {
+  transform: scale(1.05);
+}
+
 @media (max-width: 900px) {
   .playground-tasks-grid,
   .playground-dash-grid {

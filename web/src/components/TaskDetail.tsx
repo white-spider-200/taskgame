@@ -9,6 +9,7 @@ import {
   rateTaskAction,
 } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
+import { FileDropZone } from "@/components/FileDropZone";
 import {
   CATEGORY_ICONS,
   RATING_LABELS,
@@ -351,36 +352,14 @@ export function TaskDetail({
                   background: "#FFF",
                 }}
               />
-              <label
-                style={{
-                  display: "inline-block",
-                  background: "#1FB6A6",
-                  color: "#FFF",
-                  fontWeight: 700,
-                  fontSize: 13.5,
-                  padding: "8px 20px",
-                  borderRadius: 999,
-                  cursor: "pointer",
-                  fontFamily: "inherit",
-                  border: "none",
-                  boxShadow: "0 2px 0 #148F82",
-                  width: "fit-content",
-                }}
-                tabIndex={0}
-              >
-                <input
-                  type="file"
-                  accept={FILE_ACCEPT}
-                  onChange={(e) => setProofFile(e.target.files?.[0] ?? null)}
-                  style={{ display: "none" }}
-                />
-                تحميل صورة أو فيديو إثبات
-              </label>
-              {proofFile ? (
-                <div style={{ fontSize: 12.5, color: "#0E8A7D", fontWeight: 600 }}>
-                  {proofFile.name}
-                </div>
-              ) : null}
+              <FileDropZone
+                file={proofFile}
+                onFileChange={setProofFile}
+                accept={FILE_ACCEPT}
+                label="تحميل صورة أو فيديو إثبات"
+                accent="#1FB6A6"
+                accentDeep="#0E8A7D"
+              />
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <button
                   type="button"
@@ -504,40 +483,16 @@ export function TaskDetail({
                       background: "#FFF",
                     }}
                   />
-                  <label
-                    style={{
-                      display: "inline-block",
-                      background: "#F2C94C",
-                      color: "#4A3600",
-                      fontWeight: 700,
-                      fontSize: 13.5,
-                      padding: "8px 20px",
-                      borderRadius: 999,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      border: "none",
-                      boxShadow: "0 2px 0 #B8930E",
-                      width: "fit-content",
-                    }}
-                    tabIndex={0}
-                  >
-                    <input
-                      type="file"
-                      accept={FILE_ACCEPT}
-                      onChange={(e) => setEditFile(e.target.files?.[0] ?? null)}
-                      style={{ display: "none" }}
-                    />
-                    استبدال الصورة أو الفيديو
-                  </label>
-                  {editFile ? (
-                    <div style={{ fontSize: 12.5, color: "#B87A00", fontWeight: 600 }}>
-                      {editFile.name}
-                    </div>
-                  ) : task.submission.fileName ? (
-                    <div style={{ fontSize: 12.5, color: "#9A8A73", fontWeight: 600 }}>
-                      الملف الحالي: {task.submission.fileName}
-                    </div>
-                  ) : null}
+                  <FileDropZone
+                    file={editFile}
+                    onFileChange={setEditFile}
+                    accept={FILE_ACCEPT}
+                    label="استبدال الصورة أو الفيديو"
+                    accent="#F2C94C"
+                    accentDeep="#B87A00"
+                    currentUrl={task.submission.fileUrl}
+                    currentFileName={task.submission.fileName}
+                  />
                   <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                     <button
                       type="button"
