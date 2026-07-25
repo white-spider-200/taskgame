@@ -14,6 +14,7 @@ model User {
   name         String
   initial      String
   color        String       @default("#1FB6A6")
+  avatarUrl    String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   memberships  Membership[]

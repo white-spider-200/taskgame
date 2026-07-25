@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/Avatar";
 import type { LeaderRow, MemberStat } from "./types";
 
 type Props = {
@@ -50,22 +51,13 @@ export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
                   gap: 6,
                 }}
               >
-                <div
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 999,
-                    background: p3.color,
-                    color: "#FFF",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
-                    fontSize: 20,
-                    border: "3px solid #FFF",
-                  }}
-                >
-                  {p3.initial}
-                </div>
+                <Avatar
+                  url={p3.avatarUrl}
+                  initial={p3.initial}
+                  color={p3.color}
+                  size={52}
+                  style={{ fontSize: 20, border: "3px solid #FFF" }}
+                />
                 <div style={{ fontWeight: 700, fontSize: 14, color: "#2B2118" }}>
                   {p3.name.split(" ")[0]}
                 </div>
@@ -94,23 +86,17 @@ export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
                 }}
               >
                 <div style={{ fontSize: 26 }}>👑</div>
-                <div
+                <Avatar
+                  url={p1.avatarUrl}
+                  initial={p1.initial}
+                  color={p1.color}
+                  size={60}
                   style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 999,
-                    background: p1.color,
-                    color: "#FFF",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
                     fontSize: 23,
                     border: "3px solid #F2C94C",
                     boxShadow: "0 0 0 3px #FFF",
                   }}
-                >
-                  {p1.initial}
-                </div>
+                />
                 <div
                   style={{ fontWeight: 800, fontSize: 15, color: "#2B2118" }}
                 >
@@ -140,22 +126,13 @@ export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
                   gap: 6,
                 }}
               >
-                <div
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 999,
-                    background: p2.color,
-                    color: "#FFF",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
-                    fontSize: 20,
-                    border: "3px solid #FFF",
-                  }}
-                >
-                  {p2.initial}
-                </div>
+                <Avatar
+                  url={p2.avatarUrl}
+                  initial={p2.initial}
+                  color={p2.color}
+                  size={52}
+                  style={{ fontSize: 20, border: "3px solid #FFF" }}
+                />
                 <div style={{ fontWeight: 700, fontSize: 14, color: "#2B2118" }}>
                   {p2.name.split(" ")[0]}
                 </div>
@@ -207,21 +184,13 @@ export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
                 >
                   {l.rank}
                 </div>
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 999,
-                    background: l.color,
-                    color: "#FFF",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 700,
-                    fontSize: 15,
-                  }}
-                >
-                  {l.initial}
-                </div>
+                <Avatar
+                  url={l.avatarUrl}
+                  initial={l.initial}
+                  color={l.color}
+                  size={36}
+                  style={{ fontSize: 15 }}
+                />
                 <div
                   style={{
                     flex: 1,

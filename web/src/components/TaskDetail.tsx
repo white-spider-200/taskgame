@@ -8,6 +8,7 @@ import {
   finishTaskAction,
   rateTaskAction,
 } from "@/app/actions";
+import { Avatar } from "@/components/Avatar";
 import {
   CATEGORY_ICONS,
   RATING_LABELS,
@@ -226,21 +227,13 @@ export function TaskDetail({
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 999,
-                background: owner?.color || "#9A8A73",
-                color: "#FFF",
-                display: "grid",
-                placeItems: "center",
-                fontWeight: 700,
-                fontSize: 18,
-              }}
-            >
-              {owner?.initial || "؟"}
-            </div>
+            <Avatar
+              url={owner?.avatarUrl}
+              initial={owner?.initial || "؟"}
+              color={owner?.color || "#9A8A73"}
+              size={48}
+              style={{ fontSize: 18 }}
+            />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: 21, color: "#2B2118" }}>
                 {task.title}

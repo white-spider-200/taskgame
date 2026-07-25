@@ -23,6 +23,7 @@ export type LeaderRow = {
   name: string;
   initial: string;
   color: string;
+  avatarUrl: string | null;
   tasks: number;
   avg: string;
   pts: number;

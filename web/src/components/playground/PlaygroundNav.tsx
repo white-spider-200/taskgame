@@ -1,11 +1,12 @@
 import { logoutAction } from "@/app/actions";
+import { Avatar } from "@/components/Avatar";
 import { Logo } from "@/components/Logo";
 import type { View } from "./types";
 
 type Props = {
   teamName: string;
   myPoints: number;
-  me: { initial: string; color: string };
+  me: { initial: string; color: string; avatarUrl?: string | null };
   view: View;
   onViewChange: (view: View) => void;
 };
@@ -115,20 +116,19 @@ export function PlaygroundNav({
             type="button"
             onClick={() => onViewChange("profile")}
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 999,
-              background: me.color,
-              color: "#FFF",
-              display: "grid",
-              placeItems: "center",
-              fontWeight: 700,
               cursor: "pointer",
               border: "none",
+              padding: 0,
+              background: "transparent",
               fontFamily: "inherit",
             }}
           >
-            {me.initial}
+            <Avatar
+              url={me.avatarUrl}
+              initial={me.initial}
+              color={me.color}
+              size={36}
+            />
           </button>
           <form action={logoutAction}>
             <button

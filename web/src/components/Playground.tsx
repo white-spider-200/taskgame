@@ -112,6 +112,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     name: m.id === me.id ? `${m.name} (أنت)` : m.name,
     initial: m.initial,
     color: m.color,
+    avatarUrl: m.avatarUrl,
     tasks: m.count,
     avg: m.avg,
     pts: m.pts,

@@ -5,6 +5,7 @@ export type TeamMember = {
   name: string;
   initial: string;
   color: string;
+  avatarUrl: string | null;
   basePoints: number;
 };
 
@@ -90,6 +91,7 @@ export async function getTeamPayload(
     name: m.user.name,
     initial: m.user.initial,
     color: m.user.color,
+    avatarUrl: m.user.avatarUrl,
     basePoints: m.basePoints,
   }));
 
@@ -129,6 +131,7 @@ export async function getTeamPayload(
       name: membership.user.name,
       initial: membership.user.initial,
       color: membership.user.color,
+      avatarUrl: membership.user.avatarUrl,
       basePoints: membership.basePoints,
     },
     members: memberDTOs,

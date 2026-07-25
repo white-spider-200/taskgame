@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/Avatar";
 import { fmtDur } from "@/lib/format";
 import type { MemberStat } from "./types";
 
@@ -107,21 +108,13 @@ export function DashboardView({
                     key={m.id}
                     style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 999,
-                        background: m.color,
-                        color: "#FFF",
-                        display: "grid",
-                        placeItems: "center",
-                        fontWeight: 700,
-                        fontSize: 15,
-                      }}
-                    >
-                      {m.initial}
-                    </div>
+                    <Avatar
+                      url={m.avatarUrl}
+                      initial={m.initial}
+                      color={m.color}
+                      size={36}
+                      style={{ fontSize: 15 }}
+                    />
                     <div
                       style={{
                         width: 64,
@@ -199,21 +192,13 @@ export function DashboardView({
                   <div
                     style={{ display: "flex", alignItems: "center", gap: 12 }}
                   >
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 999,
-                        background: fastest.color,
-                        color: "#FFF",
-                        display: "grid",
-                        placeItems: "center",
-                        fontWeight: 700,
-                        fontSize: 18,
-                      }}
-                    >
-                      {fastest.initial}
-                    </div>
+                    <Avatar
+                      url={fastest.avatarUrl}
+                      initial={fastest.initial}
+                      color={fastest.color}
+                      size={44}
+                      style={{ fontSize: 18 }}
+                    />
                     <div>
                       <div
                         style={{

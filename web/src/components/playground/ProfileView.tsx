@@ -1,3 +1,9 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { updateAvatarAction } from "@/app/actions";
+import { Avatar } from "@/components/Avatar";
 import { fmtDur, starsStr } from "@/lib/format";
 import type { TaskDTO, TeamMember } from "@/lib/team";
 
@@ -18,6 +24,29 @@ export function ProfileView({
   myAvg,
   myTime,
 }: Props) {
+  const router = useRouter();
+  const [avatarUrl, setAvatarUrl] = useState(me.avatarUrl);
+  const [error, setError] = useState("");
+  const [, startTransition] = useTransition();
+
+  function onFileChange(file: File | null) {
+    if (!file) return;
+    setError("");
+    const fd = new FormData();
+    fd.set("file", file);
+    startTransition(async () => {
+      const res = await updateAvatarAction(fd);
+      if (res?.error) {
+        setError(res.error);
+        return;
+      }
+      if (res?.ok) {
+        setAvatarUrl(res.avatarUrl);
+        router.refresh();
+      }
+    });
+  }
+
   return (
         <div
           style={{
@@ -56,21 +85,46 @@ export function ProfileView({
                 background: "rgba(242,201,76,0.15)",
               }}
             />
-            <div
+            <label
               style={{
-                width: 64,
-                height: 64,
-                borderRadius: 999,
-                background: me.color,
-                display: "grid",
-                placeItems: "center",
-                fontWeight: 800,
-                fontSize: 26,
-                border: "3px solid #F2C94C",
+                position: "relative",
+                cursor: "pointer",
+                display: "inline-block",
               }}
+              title="تغيير الصورة الشخصية"
             >
-              {me.initial}
-            </div>
+              <Avatar
+                url={avatarUrl}
+                initial={me.initial}
+                color={me.color}
+                size={64}
+                style={{ fontSize: 26, border: "3px solid #F2C94C" }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: -2,
+                  insetInlineEnd: -2,
+                  width: 24,
+                  height: 24,
+                  borderRadius: 999,
+                  background: "#F2C94C",
+                  color: "#4A3600",
+                  display: "grid",
+                  placeItems: "center",
+                  fontSize: 13,
+                  border: "2px solid #2B2118",
+                }}
+              >
+                ✏️
+              </div>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+                style={{ display: "none" }}
+              />
+            </label>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 800, fontSize: 21 }}>{me.name}</div>
               <div
@@ -78,6 +132,13 @@ export function ProfileView({
               >
                 {teamName}
               </div>
+              {error ? (
+                <div
+                  style={{ fontSize: 12.5, color: "#FF9F9F", fontWeight: 600, marginTop: 4 }}
+                >
+                  {error}
+                </div>
+              ) : null}
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: 30, fontWeight: 800, color: "#F2C94C" }}>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Avatar } from "@/components/Avatar";
 import {
   RATING_LABELS,
   fmtTimer,
@@ -186,21 +187,13 @@ export function TasksView({
                       flexWrap: "wrap",
                     }}
                   >
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 999,
-                        background: u?.color || "#9A8A73",
-                        color: "#FFF",
-                        display: "grid",
-                        placeItems: "center",
-                        fontWeight: 700,
-                        fontSize: 17,
-                      }}
-                    >
-                      {u?.initial || "؟"}
-                    </div>
+                    <Avatar
+                      url={u?.avatarUrl}
+                      initial={u?.initial || "؟"}
+                      color={u?.color || "#9A8A73"}
+                      size={44}
+                      style={{ fontSize: 17 }}
+                    />
                     <Link
                       href={`/t/${teamId}/task/${t.id}`}
                       style={{

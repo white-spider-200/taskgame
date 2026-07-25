@@ -369,3 +369,43 @@ export async function loadTeamAction(teamId: string) {
   const user = await requireUser();
   return getTeamPayload(user.id, teamId);
 }
+
+export async function updateAvatarAction(formData: FormData) {
+  const user = await requireUser();
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "اختر صورة أولًا" };
+  }
+
+  const ext = ALLOWED_IMAGE_TYPES[file.type];
+  if (!ext) {
+    return { error: "صيغة الصورة غير مدعومة (JPEG / PNG / WebP / GIF)" };
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return { error: "حجم الصورة أكبر من 5 ميغابايت" };
+  }
+
+  const uploadsDir = path.join(process.cwd(), "public", "uploads", "avatars");
+  await mkdir(uploadsDir, { recursive: true });
+  const safeName = `${user.id}-${Date.now()}.${ext}`;
+  const diskPath = path.join(uploadsDir, safeName);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(diskPath, buffer);
+
+  const current = await prisma.user.findUnique({ where: { id: user.id } });
+  if (current?.avatarUrl) {
+    await unlink(path.join(process.cwd(), "public", current.avatarUrl)).catch(
+      () => {},
+    );
+  }
+
+  const avatarUrl = `/uploads/avatars/${safeName}`;
+  await prisma.user.update({ where: { id: user.id }, data: { avatarUrl } });
+
+  const memberships = await prisma.membership.findMany({
+    where: { userId: user.id },
+  });
+  for (const m of memberships) revalidatePath(`/t/${m.teamId}`);
+
+  return { ok: true as const, avatarUrl };
+}
