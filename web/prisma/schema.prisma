@@ -58,6 +58,7 @@ model Task {
   status     String    @default("running")
   startedAt  DateTime  @default(now())
   elapsedMs  Int?
+  completedAt DateTime?
   teamId     String
   ownerId    String
   createdAt  DateTime  @default(now())

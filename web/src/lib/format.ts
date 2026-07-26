@@ -44,6 +44,28 @@ export const USER_COLORS = [
   "#E91E8C",
 ];
 
+export function dateKey(iso: string) {
+  return new Date(iso).toLocaleDateString("en-CA");
+}
+
+const DAY_LABEL_FMT = new Intl.DateTimeFormat("ar", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+});
+
+export function dayLabel(key: string) {
+  const today = new Date();
+  const todayKey = today.toLocaleDateString("en-CA");
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = yesterday.toLocaleDateString("en-CA");
+  if (key === todayKey) return "اليوم";
+  if (key === yesterdayKey) return "أمس";
+  const [y, m, d] = key.split("-").map(Number);
+  return DAY_LABEL_FMT.format(new Date(y!, m! - 1, d!));
+}
+
 export function initialFromName(name: string) {
   const trimmed = name.trim();
   return trimmed ? trimmed[0]! : "?";

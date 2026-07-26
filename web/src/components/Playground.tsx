@@ -3,11 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createTaskAction, rateTaskAction } from "@/app/actions";
-import { fmtDur } from "@/lib/format";
+import { dateKey, fmtDur } from "@/lib/format";
 import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
 import { CreateTaskModal } from "./playground/CreateTaskModal";
 import { DashboardView } from "./playground/DashboardView";
+import { HistoryView } from "./playground/HistoryView";
 import { LeadersView } from "./playground/LeadersView";
 import { PlaygroundNav } from "./playground/PlaygroundNav";
 import { ProfileView } from "./playground/ProfileView";
@@ -70,19 +71,72 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
   const myPoints = pointsForMember(me, tasks);
 
+  const todayKey = dateKey(new Date().toISOString());
+  const isToday = (t: TaskDTO) =>
+    t.completedAt != null && dateKey(t.completedAt) === todayKey;
+
+  // All-time completed tasks — feeds the archive and the all-time points leaderboard.
   const doneTasks = tasks.filter((t) => t.status === "done");
+  // Tasks still running/in-review past their start day are swept server-side to
+  // "expired" and archived — they never show back up on the live board.
+  const expiredTasks = tasks.filter((t) => t.status === "expired");
+  const archivedTasks = [...doneTasks, ...expiredTasks];
+  // Today-only view of the board: active work plus whatever finished today.
+  // Anything finished on a previous day rolls off into the archive so each day starts fresh.
+  const todayTasks = tasks.filter(
+    (t) => t.status === "running" || t.status === "review" || isToday(t),
+  );
+  const todayDoneTasks = todayTasks.filter((t) => t.status === "done");
+
   const runCount = tasks.filter((t) => t.status === "running").length;
   const revCount = tasks.filter(
-    (t) => t.status !== "running" && t.ownerId !== me.id && t.myRating == null,
+    (t) =>
+      (t.status === "review" || t.status === "done") &&
+      t.ownerId !== me.id &&
+      t.myRating == null,
   ).length;
-  const teamAvg = doneTasks.length
+  const teamAvg = todayDoneTasks.length
     ? (
-        doneTasks.reduce((a, t) => a + (t.stars || 0), 0) / doneTasks.length
+        todayDoneTasks.reduce((a, t) => a + (t.stars || 0), 0) /
+        todayDoneTasks.length
       ).toFixed(1)
     : "—";
   const donePct =
-    Math.round((doneTasks.length / Math.max(1, tasks.length)) * 100) + "%";
+    Math.round(
+      (todayDoneTasks.length / Math.max(1, todayTasks.length)) * 100,
+    ) + "%";
 
+  // Today-scoped: powers the dashboard's "who did what" panel, so it resets daily.
+  const todayStats = members.map((u) => {
+    const mine = todayDoneTasks.filter((t) => t.ownerId === u.id);
+    const avg = mine.length
+      ? (mine.reduce((a, t) => a + (t.stars || 0), 0) / mine.length).toFixed(1)
+      : "—";
+    const avgTime = mine.length
+      ? mine.reduce((a, t) => a + (t.elapsedMs || 0), 0) / mine.length
+      : Infinity;
+    return {
+      ...u,
+      count: mine.length,
+      avg,
+      avgTime,
+      pts: pointsForMember(u, tasks),
+    };
+  });
+
+  const maxCount = Math.max(1, ...todayStats.map((m) => m.count));
+  const memberStats = [...todayStats]
+    .sort((a, b) => b.count - a.count)
+    .map((m) => ({
+      ...m,
+      pct: Math.round((m.count / maxCount) * 100) + "%",
+    }));
+  const fastest =
+    todayStats
+      .filter((m) => m.count > 0)
+      .sort((a, b) => a.avgTime - b.avgTime)[0] || todayStats[0];
+
+  // All-time: powers the leaderboard, since accumulated points shouldn't reset daily.
   const stats = members.map((u) => {
     const mine = doneTasks.filter((t) => t.ownerId === u.id);
     const avg = mine.length
@@ -99,17 +153,6 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       pts: pointsForMember(u, tasks),
     };
   });
-
-  const maxCount = Math.max(1, ...stats.map((m) => m.count));
-  const memberStats = [...stats]
-    .sort((a, b) => b.count - a.count)
-    .map((m) => ({
-      ...m,
-      pct: Math.round((m.count / maxCount) * 100) + "%",
-    }));
-  const fastest =
-    stats.filter((m) => m.count > 0).sort((a, b) => a.avgTime - b.avgTime)[0] ||
-    stats[0];
   const sorted = [...stats].sort((a, b) => b.pts - a.pts);
   const rankColors = ["#F2C94C", "#C9C0B4", "#D8956B"];
   const miniLeaders = sorted.slice(0, 3).map((m, i) => ({
@@ -146,8 +189,12 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const visibleTasks = tasks.filter((t) => {
     if (filter === "run") return t.status === "running";
     if (filter === "rev")
-      return t.status !== "running" && t.ownerId !== me.id && t.myRating == null;
-    return t.status === "done";
+      return (
+        (t.status === "review" || t.status === "done") &&
+        t.ownerId !== me.id &&
+        t.myRating == null
+      );
+    return t.status === "done" && isToday(t);
   });
 
   void tick;
@@ -250,9 +297,9 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       {view === "tasks" ? (
         <TasksView
           teamId={data.team.id}
-          tasks={tasks}
+          tasks={todayTasks}
           visibleTasks={visibleTasks}
-          doneTasks={doneTasks}
+          doneTasks={todayDoneTasks}
           donePct={donePct}
           inviteCode={data.team.inviteCode}
           me={me}
@@ -272,7 +319,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
       {view === "dash" ? (
         <DashboardView
-          doneTasksCount={doneTasks.length}
+          doneTasksCount={todayDoneTasks.length}
           runCount={runCount}
           revCount={revCount}
           teamAvg={teamAvg}
@@ -284,6 +331,10 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
       {view === "leaders" ? (
         <LeadersView p1={p1} p2={p2} p3={p3} leaderRows={leaderRows} />
+      ) : null}
+
+      {view === "history" ? (
+        <HistoryView tasks={archivedTasks} memberMap={memberMap} />
       ) : null}
 
       {view === "profile" ? (

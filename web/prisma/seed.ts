@@ -139,6 +139,7 @@ async function main() {
         status: "done",
         startedAt: new Date(now - d.elapsedMs - 60000),
         elapsedMs: d.elapsedMs,
+        completedAt: new Date(now - 60000),
         teamId: team.id,
         ownerId: d.ownerId,
         submission: {

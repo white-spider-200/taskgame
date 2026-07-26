@@ -21,9 +21,10 @@ export type TaskDTO = {
   title: string;
   desc: string;
   category: string;
-  status: "running" | "review" | "done";
+  status: "running" | "review" | "done" | "expired";
   startedAt: string;
   elapsedMs: number | null;
+  completedAt: string | null;
   ownerId: string;
   stars: number | null;
   ratingsCount: number;
@@ -53,10 +54,26 @@ function pointsForMember(
 
 export { pointsForMember };
 
+// Tasks still running/in-review when their start day ends are stale — the board
+// resets daily, so they're archived as "expired" rather than lingering forever.
+async function sweepStaleTasks() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  await prisma.task.updateMany({
+    where: {
+      status: { in: ["running", "review"] },
+      startedAt: { lt: startOfToday },
+    },
+    data: { status: "expired" },
+  });
+}
+
 export async function getTeamPayload(
   userId: string,
   teamId?: string,
 ): Promise<TeamPayload | null> {
+  await sweepStaleTasks();
+
   const membership = teamId
     ? await prisma.membership.findUnique({
         where: { userId_teamId: { userId, teamId } },
@@ -103,6 +120,7 @@ export async function getTeamPayload(
     status: t.status as TaskDTO["status"],
     startedAt: t.startedAt.toISOString(),
     elapsedMs: t.elapsedMs,
+    completedAt: t.completedAt ? t.completedAt.toISOString() : null,
     ownerId: t.ownerId,
     stars: t.ratings.length
       ? t.ratings.reduce((a, r) => a + r.stars, 0) / t.ratings.length

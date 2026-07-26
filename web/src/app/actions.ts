@@ -353,7 +353,7 @@ export async function rateTaskAction(taskId: string, stars: number) {
   if (task.status === "review") {
     await prisma.task.update({
       where: { id: taskId },
-      data: { status: "done" },
+      data: { status: "done", completedAt: new Date() },
     });
   }
 

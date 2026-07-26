@@ -1,6 +1,6 @@
 import type { TeamMember } from "@/lib/team";
 
-export type View = "tasks" | "dash" | "leaders" | "profile";
+export type View = "tasks" | "dash" | "leaders" | "history" | "profile";
 export type Filter = "run" | "rev" | "done";
 
 export type MemberStat = TeamMember & {

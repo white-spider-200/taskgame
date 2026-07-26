@@ -67,6 +67,7 @@ export function PlaygroundNav({
               ["tasks", "المهام"],
               ["dash", "لوحة الإنجاز"],
               ["leaders", "المتصدرون"],
+              ["history", "الأرشيف"],
               ["profile", "ملفي"],
             ] as const
           ).map(([v, label]) => (
