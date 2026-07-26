@@ -166,7 +166,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const monthStats = members
     .map((u) => {
       const mine = monthDoneTasks.filter((t) => t.ownerId === u.id);
-      const pts = mine.reduce((a, t) => a + Math.round((t.stars || 0) * 2), 0);
+      const pts = pointsForMember(u, monthDoneTasks);
       return { ...u, count: mine.length, pts };
     })
     .sort((a, b) => b.pts - a.pts);
