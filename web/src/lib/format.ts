@@ -66,6 +66,21 @@ export function dayLabel(key: string) {
   return DAY_LABEL_FMT.format(new Date(y!, m! - 1, d!));
 }
 
+export function monthKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+const MONTH_LABEL_FMT = new Intl.DateTimeFormat("ar", {
+  month: "long",
+  year: "numeric",
+});
+
+export function monthLabel(key: string) {
+  const [y, m] = key.split("-").map(Number);
+  return MONTH_LABEL_FMT.format(new Date(y!, m! - 1, 1));
+}
+
 export function initialFromName(name: string) {
   const trimmed = name.trim();
   return trimmed ? trimmed[0]! : "?";

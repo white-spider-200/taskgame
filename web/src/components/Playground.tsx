@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createTaskAction, rateTaskAction } from "@/app/actions";
-import { dateKey, fmtDur } from "@/lib/format";
+import { dateKey, fmtDur, monthKey, monthLabel } from "@/lib/format";
 import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
 import { CreateTaskModal } from "./playground/CreateTaskModal";
@@ -106,7 +106,8 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       (todayDoneTasks.length / Math.max(1, todayTasks.length)) * 100,
     ) + "%";
 
-  // Today-scoped: powers the dashboard's "who did what" panel, so it resets daily.
+  // Today-scoped: powers the dashboard's "who did what" panel AND the leaderboard,
+  // so both reset daily — pts here counts only stars earned on today's tasks.
   const todayStats = members.map((u) => {
     const mine = todayDoneTasks.filter((t) => t.ownerId === u.id);
     const avg = mine.length
@@ -115,12 +116,13 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     const avgTime = mine.length
       ? mine.reduce((a, t) => a + (t.elapsedMs || 0), 0) / mine.length
       : Infinity;
+    const pts = mine.reduce((a, t) => a + Math.round((t.stars || 0) * 2), 0);
     return {
       ...u,
       count: mine.length,
       avg,
       avgTime,
-      pts: pointsForMember(u, tasks),
+      pts,
     };
   });
 
@@ -136,24 +138,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       .filter((m) => m.count > 0)
       .sort((a, b) => a.avgTime - b.avgTime)[0] || todayStats[0];
 
-  // All-time: powers the leaderboard, since accumulated points shouldn't reset daily.
-  const stats = members.map((u) => {
-    const mine = doneTasks.filter((t) => t.ownerId === u.id);
-    const avg = mine.length
-      ? (mine.reduce((a, t) => a + (t.stars || 0), 0) / mine.length).toFixed(1)
-      : "—";
-    const avgTime = mine.length
-      ? mine.reduce((a, t) => a + (t.elapsedMs || 0), 0) / mine.length
-      : Infinity;
-    return {
-      ...u,
-      count: mine.length,
-      avg,
-      avgTime,
-      pts: pointsForMember(u, tasks),
-    };
-  });
-  const sorted = [...stats].sort((a, b) => b.pts - a.pts);
+  const sorted = [...todayStats].sort((a, b) => b.pts - a.pts);
   const rankColors = ["#F2C94C", "#C9C0B4", "#D8956B"];
   const miniLeaders = sorted.slice(0, 3).map((m, i) => ({
     rank: i + 1,
@@ -172,6 +157,31 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     pts: m.pts,
     bg: m.id === me.id ? "#FFFBF0" : "#FFFFFF",
   }));
+
+  // Month-scoped: powers "موظف الشهر" — best point total among tasks finished this month.
+  const currentMonthKey = monthKey(new Date().toISOString());
+  const monthDoneTasks = doneTasks.filter(
+    (t) => t.completedAt != null && monthKey(t.completedAt) === currentMonthKey,
+  );
+  const monthStats = members
+    .map((u) => {
+      const mine = monthDoneTasks.filter((t) => t.ownerId === u.id);
+      const pts = mine.reduce((a, t) => a + Math.round((t.stars || 0) * 2), 0);
+      return { ...u, count: mine.length, pts };
+    })
+    .sort((a, b) => b.pts - a.pts);
+  const employeeOfMonth =
+    monthStats[0] && monthStats[0].pts > 0
+      ? {
+          name: monthStats[0].id === me.id ? "أنت" : monthStats[0].name,
+          initial: monthStats[0].initial,
+          color: monthStats[0].color,
+          avatarUrl: monthStats[0].avatarUrl,
+          monthLabel: monthLabel(currentMonthKey),
+          tasks: monthStats[0].count,
+          pts: monthStats[0].pts,
+        }
+      : undefined;
 
   const myDoneTasks = doneTasks.filter((t) => t.ownerId === me.id);
   const myAvg = myDoneTasks.length
@@ -330,7 +340,13 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       ) : null}
 
       {view === "leaders" ? (
-        <LeadersView p1={p1} p2={p2} p3={p3} leaderRows={leaderRows} />
+        <LeadersView
+          p1={p1}
+          p2={p2}
+          p3={p3}
+          leaderRows={leaderRows}
+          employeeOfMonth={employeeOfMonth}
+        />
       ) : null}
 
       {view === "history" ? (

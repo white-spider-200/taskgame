@@ -29,3 +29,13 @@ export type LeaderRow = {
   pts: number;
   bg: string;
 };
+
+export type EmployeeOfMonth = {
+  name: string;
+  initial: string;
+  color: string;
+  avatarUrl: string | null;
+  monthLabel: string;
+  tasks: number;
+  pts: number;
+};

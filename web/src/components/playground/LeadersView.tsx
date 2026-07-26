@@ -1,14 +1,21 @@
 import { Avatar } from "@/components/Avatar";
-import type { LeaderRow, MemberStat } from "./types";
+import type { EmployeeOfMonth, LeaderRow, MemberStat } from "./types";
 
 type Props = {
   p1: MemberStat | undefined;
   p2: MemberStat | undefined;
   p3: MemberStat | undefined;
   leaderRows: LeaderRow[];
+  employeeOfMonth: EmployeeOfMonth | undefined;
 };
 
-export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
+export function LeadersView({
+  p1,
+  p2,
+  p3,
+  leaderRows,
+  employeeOfMonth,
+}: Props) {
   return (
         <div
           style={{
@@ -23,16 +30,61 @@ export function LeadersView({ p1, p2, p3, leaderRows }: Props) {
             boxSizing: "border-box",
           }}
         >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: 24,
-              fontWeight: 800,
-              color: "#2B2118",
-            }}
-          >
-            🏆 المتصدرون
-          </h2>
+          <div>
+            <h2
+              style={{
+                margin: 0,
+                fontSize: 24,
+                fontWeight: 800,
+                color: "#2B2118",
+              }}
+            >
+              🏆 المتصدرون
+            </h2>
+            <div
+              style={{
+                fontSize: 13.5,
+                color: "#9A8A73",
+                fontWeight: 600,
+                marginTop: 2,
+              }}
+            >
+              يتجدد كل يوم — نجوم اليوم فقط
+            </div>
+          </div>
+
+          {employeeOfMonth ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                background: "linear-gradient(90deg, #FFF3D6, #FFE9A8)",
+                border: "2px solid #F2C94C",
+                borderRadius: 18,
+                padding: "14px 18px",
+              }}
+            >
+              <div style={{ fontSize: 28 }}>🏅</div>
+              <Avatar
+                url={employeeOfMonth.avatarUrl}
+                initial={employeeOfMonth.initial}
+                color={employeeOfMonth.color}
+                size={44}
+                style={{ fontSize: 17, border: "3px solid #FFF" }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 800, fontSize: 16, color: "#2B2118" }}>
+                  موظف الشهر · {employeeOfMonth.name}
+                </div>
+                <div style={{ fontSize: 13, color: "#7A5A00", fontWeight: 600 }}>
+                  {employeeOfMonth.monthLabel} · {employeeOfMonth.tasks} مهمة ·{" "}
+                  {employeeOfMonth.pts} نقطة
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {p1 && p2 && p3 ? (
             <div
               style={{
