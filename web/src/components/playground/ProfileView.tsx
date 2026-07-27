@@ -30,6 +30,7 @@ export function ProfileView({
   const router = useRouter();
   const [avatarUrl, setAvatarUrl] = useState(me.avatarUrl);
   const [error, setError] = useState("");
+  const [expanded, setExpanded] = useState(false);
   const [, startTransition] = useTransition();
   const badges = computeBadges(myDoneTasks);
   const earnedKey = badges
@@ -150,22 +151,27 @@ export function ProfileView({
               }}
             />
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-              <label
+              <div
                 style={{
                   position: "relative",
-                  cursor: "pointer",
                   display: "inline-block",
                 }}
-                title="تغيير الصورة الشخصية"
               >
-                <Avatar
-                  url={avatarUrl}
-                  initial={me.initial}
-                  color={me.color}
-                  size={64}
-                  style={{ fontSize: 26, border: "3px solid #F2C94C" }}
-                />
                 <div
+                  onClick={() => avatarUrl && setExpanded(true)}
+                  style={{ cursor: avatarUrl ? "pointer" : "default" }}
+                  title={avatarUrl ? "عرض الصورة" : undefined}
+                >
+                  <Avatar
+                    url={avatarUrl}
+                    initial={me.initial}
+                    color={me.color}
+                    size={64}
+                    style={{ fontSize: 26, border: "3px solid #F2C94C" }}
+                  />
+                </div>
+                <label
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     position: "absolute",
                     bottom: -2,
@@ -179,17 +185,19 @@ export function ProfileView({
                     placeItems: "center",
                     fontSize: 13,
                     border: "2px solid #2B2118",
+                    cursor: "pointer",
                   }}
+                  title="تغيير الصورة الشخصية"
                 >
                   ✏️
-                </div>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-                  style={{ display: "none" }}
-                />
-              </label>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+                    style={{ display: "none" }}
+                  />
+                </label>
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: 21 }}>{me.name}</div>
                 <div
@@ -352,6 +360,55 @@ export function ProfileView({
               ) : null}
             </div>
           </div>
+          {expanded && avatarUrl ? (
+            <div
+              onClick={() => setExpanded(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(20,15,10,0.85)",
+                zIndex: 100,
+                display: "grid",
+                placeItems: "center",
+                cursor: "zoom-out",
+                padding: 24,
+                boxSizing: "border-box",
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={avatarUrl}
+                alt={me.name}
+                style={{
+                  maxWidth: "min(90vw, 480px)",
+                  maxHeight: "80vh",
+                  borderRadius: 20,
+                  border: "4px solid #F2C94C",
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+                }}
+              />
+              <button
+                onClick={() => setExpanded(false)}
+                style={{
+                  position: "fixed",
+                  top: 20,
+                  insetInlineEnd: 24,
+                  width: 36,
+                  height: 36,
+                  borderRadius: 999,
+                  border: "none",
+                  background: "#FFF",
+                  color: "#2B2118",
+                  fontSize: 18,
+                  fontWeight: 800,
+                  cursor: "pointer",
+                }}
+                title="إغلاق"
+              >
+                ✕
+              </button>
+            </div>
+          ) : null}
         </div>
       );
 }
