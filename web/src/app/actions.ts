@@ -14,7 +14,24 @@ import {
 } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { CATEGORIES, USER_COLORS, initialFromName } from "@/lib/format";
-import { getTeamPayload } from "@/lib/team";
+import { getTeamPayload, type SubmissionDTO } from "@/lib/team";
+
+function toSubmissionDTO(submission: {
+  type: string;
+  text: string;
+  files: { id: string; url: string; name: string; kind: string }[];
+}): SubmissionDTO {
+  return {
+    type: submission.type as SubmissionDTO["type"],
+    text: submission.text,
+    files: submission.files.map((f) => ({
+      id: f.id,
+      url: f.url,
+      name: f.name,
+      kind: f.kind as "image" | "video",
+    })),
+  };
+}
 
 const ALLOWED_IMAGE_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -27,8 +44,49 @@ const ALLOWED_VIDEO_TYPES: Record<string, string> = {
   "video/webm": "webm",
   "video/quicktime": "mov",
 };
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_IMAGES_PER_SUBMISSION = 5;
+const MAX_VIDEOS_PER_SUBMISSION = 3;
+
+type SavedFile = { url: string; name: string; kind: "image" | "video" };
+
+async function validateAndSaveFiles(
+  files: File[],
+  taskId: string,
+): Promise<{ error: string } | { saved: SavedFile[] }> {
+  const saved: SavedFile[] = [];
+  const uploadsDir = path.join(process.cwd(), "public", "uploads");
+  await mkdir(uploadsDir, { recursive: true });
+
+  for (const file of files) {
+    const mime = file.type;
+    const imageExt = ALLOWED_IMAGE_TYPES[mime];
+    const videoExt = ALLOWED_VIDEO_TYPES[mime];
+    if (!imageExt && !videoExt) {
+      return { error: "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV)" };
+    }
+    const kind: "image" | "video" = imageExt ? "image" : "video";
+    const ext = imageExt ?? videoExt!;
+    const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+    if (file.size > maxBytes) {
+      return {
+        error:
+          kind === "video"
+            ? "حجم الفيديو أكبر من 50 ميغابايت"
+            : "حجم الصورة أكبر من 15 ميغابايت",
+      };
+    }
+
+    const safeName = `${taskId}-${Date.now()}-${saved.length}.${ext}`;
+    const diskPath = path.join(uploadsDir, safeName);
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(diskPath, buffer);
+    saved.push({ url: `/uploads/${safeName}`, name: file.name || safeName, kind });
+  }
+
+  return { saved };
+}
 
 const credSchema = z.object({
   email: z.string().email(),
@@ -157,11 +215,26 @@ export async function createTaskAction(input: {
   return { ok: true as const };
 }
 
+export async function deleteTaskAction(taskId: string) {
+  const user = await requireUser();
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) return { error: "المهمة غير موجودة" };
+  if (task.ownerId !== user.id) return { error: "فقط صاحب المهمة يمكنه حذفها" };
+  if (task.status !== "running") {
+    return { error: "لا يمكن حذف مهمة بعد إنهائها" };
+  }
+
+  await prisma.task.delete({ where: { id: taskId } });
+
+  revalidatePath(`/t/${task.teamId}`);
+  return { ok: true as const };
+}
+
 export async function finishTaskAction(formData: FormData) {
   const user = await requireUser();
   const taskId = String(formData.get("taskId") || "").trim();
   const text = String(formData.get("text") || "").trim();
-  const file = formData.get("file");
+  const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!taskId) return { error: "المهمة غير موجودة" };
 
@@ -174,46 +247,24 @@ export async function finishTaskAction(formData: FormData) {
   if (task.status !== "running") return { error: "المهمة ليست قيد التنفيذ" };
   if (task.submission) return { error: "تم إرفاق إثبات لهذه المهمة مسبقًا" };
 
-  const hasFile = file instanceof File && file.size > 0;
-  if (!text && !hasFile) {
+  if (!text && files.length === 0) {
     return { error: "أرفق نصًا أو صورة كإثبات للعمل" };
   }
 
-  let fileUrl: string | null = null;
-  let fileName: string | null = null;
-
-  let fileKind: "image" | "video" | null = null;
-
-  if (hasFile) {
-    const mime = file.type;
-    const imageExt = ALLOWED_IMAGE_TYPES[mime];
-    const videoExt = ALLOWED_VIDEO_TYPES[mime];
-    if (!imageExt && !videoExt) {
-      return { error: "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV)" };
-    }
-    fileKind = imageExt ? "image" : "video";
-    const ext = imageExt ?? videoExt!;
-    const maxBytes = fileKind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-    if (file.size > maxBytes) {
-      return {
-        error:
-          fileKind === "video"
-            ? "حجم الفيديو أكبر من 50 ميغابايت"
-            : "حجم الصورة أكبر من 5 ميغابايت",
-      };
-    }
-
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    const safeName = `${taskId}-${Date.now()}.${ext}`;
-    const diskPath = path.join(uploadsDir, safeName);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(diskPath, buffer);
-    fileUrl = `/uploads/${safeName}`;
-    fileName = file.name || safeName;
+  const imageCount = files.filter((f) => ALLOWED_IMAGE_TYPES[f.type]).length;
+  const videoCount = files.filter((f) => ALLOWED_VIDEO_TYPES[f.type]).length;
+  if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
+  }
+  if (videoCount > MAX_VIDEOS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_VIDEOS_PER_SUBMISSION} فيديوهات لكل إثبات` };
   }
 
-  const type = text && fileUrl ? "both" : fileKind ?? "text";
+  const result = await validateAndSaveFiles(files, taskId);
+  if ("error" in result) return { error: result.error };
+  const { saved } = result;
+
+  const type = text && saved.length ? "both" : saved.length ? "media" : "text";
   const elapsedMs = Date.now() - task.startedAt.getTime();
 
   await prisma.$transaction([
@@ -222,8 +273,7 @@ export async function finishTaskAction(formData: FormData) {
         taskId,
         type,
         text,
-        fileUrl,
-        fileName,
+        files: { create: saved },
       },
     }),
     prisma.task.update({
@@ -235,11 +285,16 @@ export async function finishTaskAction(formData: FormData) {
     }),
   ]);
 
+  const submission = await prisma.submission.findUniqueOrThrow({
+    where: { taskId },
+    include: { files: true },
+  });
+
   revalidatePath(`/t/${task.teamId}`);
   return {
     ok: true as const,
     elapsedMs,
-    submission: { type: type as "text" | "image" | "both", text, fileUrl, fileName },
+    submission: toSubmissionDTO(submission),
   };
 }
 
@@ -247,82 +302,76 @@ export async function editSubmissionAction(formData: FormData) {
   const user = await requireUser();
   const taskId = String(formData.get("taskId") || "").trim();
   const text = String(formData.get("text") || "").trim();
-  const file = formData.get("file");
+  const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
+  const removeFileIds = String(formData.get("removeFileIds") || "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
 
   if (!taskId) return { error: "المهمة غير موجودة" };
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { submission: true },
+    include: { submission: { include: { files: true } } },
   });
   if (!task) return { error: "المهمة غير موجودة" };
   if (task.ownerId !== user.id) return { error: "فقط صاحب المهمة يمكنه تعديل إثباتها" };
   if (!task.submission) return { error: "لا يوجد إثبات لتعديله بعد" };
 
-  const hasFile = file instanceof File && file.size > 0;
-  let fileUrl = task.submission.fileUrl;
-  let fileName = task.submission.fileName;
-  let fileKind: "image" | "video" | null = fileUrl
-    ? /\.(mp4|webm|mov)$/i.test(fileUrl)
-      ? "video"
-      : "image"
-    : null;
+  const keptFiles = task.submission.files.filter((f) => !removeFileIds.includes(f.id));
 
-  if (!text && !hasFile && !fileUrl) {
+  if (!text && files.length === 0 && keptFiles.length === 0) {
     return { error: "أرفق نصًا أو صورة كإثبات للعمل" };
   }
 
-  if (hasFile) {
-    const mime = file.type;
-    const imageExt = ALLOWED_IMAGE_TYPES[mime];
-    const videoExt = ALLOWED_VIDEO_TYPES[mime];
-    if (!imageExt && !videoExt) {
-      return { error: "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV)" };
-    }
-    fileKind = imageExt ? "image" : "video";
-    const ext = imageExt ?? videoExt!;
-    const maxBytes = fileKind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-    if (file.size > maxBytes) {
-      return {
-        error:
-          fileKind === "video"
-            ? "حجم الفيديو أكبر من 50 ميغابايت"
-            : "حجم الصورة أكبر من 5 ميغابايت",
-      };
-    }
-
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-    const safeName = `${taskId}-${Date.now()}.${ext}`;
-    const diskPath = path.join(uploadsDir, safeName);
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(diskPath, buffer);
-
-    const oldFileUrl = task.submission.fileUrl;
-    if (oldFileUrl) {
-      await unlink(path.join(process.cwd(), "public", oldFileUrl)).catch(() => {});
-    }
-
-    fileUrl = `/uploads/${safeName}`;
-    fileName = file.name || safeName;
+  const imageCount =
+    keptFiles.filter((f) => f.kind === "image").length +
+    files.filter((f) => ALLOWED_IMAGE_TYPES[f.type]).length;
+  const videoCount =
+    keptFiles.filter((f) => f.kind === "video").length +
+    files.filter((f) => ALLOWED_VIDEO_TYPES[f.type]).length;
+  if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
+  }
+  if (videoCount > MAX_VIDEOS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_VIDEOS_PER_SUBMISSION} فيديوهات لكل إثبات` };
   }
 
-  const type = text && fileUrl ? "both" : fileKind ?? "text";
+  const result = await validateAndSaveFiles(files, taskId);
+  if ("error" in result) return { error: result.error };
+  const { saved } = result;
 
-  await prisma.submission.update({
+  const filesToRemove = task.submission.files.filter((f) => removeFileIds.includes(f.id));
+  for (const f of filesToRemove) {
+    await unlink(path.join(process.cwd(), "public", f.url)).catch(() => {});
+  }
+
+  const totalFiles = keptFiles.length + saved.length;
+  const type = text && totalFiles ? "both" : totalFiles ? "media" : "text";
+
+  await prisma.$transaction([
+    ...(filesToRemove.length
+      ? [
+          prisma.submissionFile.deleteMany({
+            where: { id: { in: filesToRemove.map((f) => f.id) } },
+          }),
+        ]
+      : []),
+    prisma.submission.update({
+      where: { taskId },
+      data: { type, text, files: { create: saved } },
+    }),
+  ]);
+
+  const submission = await prisma.submission.findUniqueOrThrow({
     where: { taskId },
-    data: { type, text, fileUrl, fileName },
+    include: { files: true },
   });
 
   revalidatePath(`/t/${task.teamId}`);
   return {
     ok: true as const,
-    submission: {
-      type: type as "text" | "image" | "video" | "both",
-      text,
-      fileUrl,
-      fileName,
-    },
+    submission: toSubmissionDTO(submission),
   };
 }
 
@@ -382,7 +431,7 @@ export async function updateAvatarAction(formData: FormData) {
     return { error: "صيغة الصورة غير مدعومة (JPEG / PNG / WebP / GIF)" };
   }
   if (file.size > MAX_IMAGE_BYTES) {
-    return { error: "حجم الصورة أكبر من 5 ميغابايت" };
+    return { error: "حجم الصورة أكبر من 15 ميغابايت" };
   }
 
   const uploadsDir = path.join(process.cwd(), "public", "uploads", "avatars");
