@@ -19,6 +19,7 @@ export type MiniLeader = {
 };
 
 export type LeaderRow = {
+  id: string;
   rank: number;
   name: string;
   initial: string;

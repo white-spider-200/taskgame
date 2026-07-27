@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { createTaskAction, rateTaskAction } from "@/app/actions";
+import { createTaskAction, deleteTaskAction, rateTaskAction } from "@/app/actions";
 import { dateKey, fmtDur, monthKey, monthLabel } from "@/lib/format";
 import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
@@ -20,6 +20,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const router = useRouter();
   const [data, setData] = useState(initial);
   const [view, setView] = useState<View>("tasks");
+  const [viewMemberId, setViewMemberId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("run");
   const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -147,6 +148,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     rankColor: rankColors[i]!,
   }));
   const leaderRows = sorted.map((m, i) => ({
+    id: m.id,
     rank: i + 1,
     name: m.id === me.id ? `${m.name} (أنت)` : m.name,
     initial: m.initial,
@@ -166,7 +168,10 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const monthStats = members
     .map((u) => {
       const mine = monthDoneTasks.filter((t) => t.ownerId === u.id);
-      const pts = pointsForMember(u, monthDoneTasks);
+      const pts = mine.reduce(
+        (a, t) => a + (t.stars ? Math.round(t.stars * 2) : 0),
+        0,
+      );
       return { ...u, count: mine.length, pts };
     })
     .sort((a, b) => b.pts - a.pts);
@@ -183,21 +188,53 @@ export function Playground({ initial }: { initial: TeamPayload }) {
         }
       : undefined;
 
-  const myDoneTasks = doneTasks.filter((t) => t.ownerId === me.id);
-  const myAvg = myDoneTasks.length
-    ? (
-        myDoneTasks.reduce((a, t) => a + (t.stars || 0), 0) / myDoneTasks.length
-      ).toFixed(1)
-    : "—";
-  const myTime = myDoneTasks.length
-    ? fmtDur(
-        myDoneTasks.reduce((a, t) => a + (t.elapsedMs || 0), 0) /
-          myDoneTasks.length,
-      )
-    : "—";
+  function statsForMember(id: string) {
+    const person = memberMap.get(id) ?? me;
+    const personDoneTasks = doneTasks.filter((t) => t.ownerId === id);
+    const personRecentTasks = tasks.filter(
+      (t) => t.ownerId === id && (t.status === "done" || t.status === "review"),
+    );
+    const personAvg = personDoneTasks.length
+      ? (
+          personDoneTasks.reduce((a, t) => a + (t.stars || 0), 0) /
+          personDoneTasks.length
+        ).toFixed(1)
+      : "—";
+    const personTime = personDoneTasks.length
+      ? fmtDur(
+          personDoneTasks.reduce((a, t) => a + (t.elapsedMs || 0), 0) /
+            personDoneTasks.length,
+        )
+      : "—";
+    return {
+      member: person,
+      points: pointsForMember(person, tasks),
+      doneTasks: personDoneTasks,
+      recentTasks: personRecentTasks,
+      avg: personAvg,
+      time: personTime,
+    };
+  }
+
+  const profileMemberId = viewMemberId ?? me.id;
+  const profileStats = statsForMember(profileMemberId);
+
+  function onViewChange(v: View) {
+    setViewMemberId(null);
+    setView(v);
+  }
+
+  function onSelectMember(id: string) {
+    setViewMemberId(id);
+    setView("profile");
+  }
 
   const visibleTasks = tasks.filter((t) => {
-    if (filter === "run") return t.status === "running";
+    if (filter === "run")
+      return (
+        t.status === "running" ||
+        (t.status === "review" && t.ownerId === me.id)
+      );
     if (filter === "rev")
       return (
         (t.status === "review" || t.status === "done") &&
@@ -252,6 +289,25 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     });
   }
 
+  function onDelete(id: string) {
+    if (!window.confirm("هل تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء.")) {
+      return;
+    }
+    startTransition(async () => {
+      const res = await deleteTaskAction(id);
+      if (res?.error) {
+        showToast(res.error, "error");
+        return;
+      }
+      setData((d) => ({
+        ...d,
+        tasks: d.tasks.filter((t) => t.id !== id),
+      }));
+      showToast("🗑 تم حذف المهمة");
+      router.refresh();
+    });
+  }
+
   function onCreate() {
     const title = formTitle.trim();
     if (!title) {
@@ -299,7 +355,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
         myPoints={myPoints}
         me={me}
         view={view}
-        onViewChange={setView}
+        onViewChange={onViewChange}
       />
 
       <Toast message={toast} />
@@ -324,6 +380,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
             setRatings((r) => ({ ...r, [taskId]: stars }))
           }
           onRate={onRate}
+          onDelete={onDelete}
         />
       ) : null}
 
@@ -346,6 +403,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
           p3={p3}
           leaderRows={leaderRows}
           employeeOfMonth={employeeOfMonth}
+          onSelectMember={onSelectMember}
         />
       ) : null}
 
@@ -355,12 +413,23 @@ export function Playground({ initial }: { initial: TeamPayload }) {
 
       {view === "profile" ? (
         <ProfileView
-          me={me}
+          key={profileMemberId}
+          member={profileStats.member}
+          isMe={profileMemberId === me.id}
           teamName={data.team.name}
-          myPoints={myPoints}
-          myDoneTasks={myDoneTasks}
-          myAvg={myAvg}
-          myTime={myTime}
+          points={profileStats.points}
+          doneTasks={profileStats.doneTasks}
+          recentTasks={profileStats.recentTasks}
+          avg={profileStats.avg}
+          time={profileStats.time}
+          onBack={
+            viewMemberId
+              ? () => {
+                  setViewMemberId(null);
+                  setView("leaders");
+                }
+              : undefined
+          }
         />
       ) : null}
 

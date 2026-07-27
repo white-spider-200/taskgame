@@ -7,6 +7,7 @@ type Props = {
   p3: MemberStat | undefined;
   leaderRows: LeaderRow[];
   employeeOfMonth: EmployeeOfMonth | undefined;
+  onSelectMember: (id: string) => void;
 };
 
 export function LeadersView({
@@ -15,6 +16,7 @@ export function LeadersView({
   p3,
   leaderRows,
   employeeOfMonth,
+  onSelectMember,
 }: Props) {
   return (
         <div
@@ -96,11 +98,13 @@ export function LeadersView({
               }}
             >
               <div
+                onClick={() => onSelectMember(p3.id)}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   gap: 6,
+                  cursor: "pointer",
                 }}
               >
                 <Avatar
@@ -130,11 +134,13 @@ export function LeadersView({
                 </div>
               </div>
               <div
+                onClick={() => onSelectMember(p1.id)}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   gap: 6,
+                  cursor: "pointer",
                 }}
               >
                 <div style={{ fontSize: 26 }}>👑</div>
@@ -171,11 +177,13 @@ export function LeadersView({
                 </div>
               </div>
               <div
+                onClick={() => onSelectMember(p2.id)}
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   gap: 6,
+                  cursor: "pointer",
                 }}
               >
                 <Avatar
@@ -217,6 +225,7 @@ export function LeadersView({
             {leaderRows.map((l) => (
               <div
                 key={l.rank}
+                onClick={() => onSelectMember(l.id)}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -224,6 +233,7 @@ export function LeadersView({
                   padding: "12px 18px",
                   borderBottom: "1px solid #FFF3DE",
                   background: l.bg,
+                  cursor: "pointer",
                 }}
               >
                 <div

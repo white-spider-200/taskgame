@@ -9,48 +9,53 @@ import { fmtDur, starsStr } from "@/lib/format";
 import type { TaskDTO, TeamMember } from "@/lib/team";
 
 type Props = {
-  me: TeamMember;
+  member: TeamMember;
+  isMe: boolean;
   teamName: string;
-  myPoints: number;
-  myDoneTasks: TaskDTO[];
-  myRecentTasks: TaskDTO[];
-  myAvg: string;
-  myTime: string;
+  points: number;
+  doneTasks: TaskDTO[];
+  recentTasks: TaskDTO[];
+  avg: string;
+  time: string;
+  onBack?: () => void;
 };
 
 export function ProfileView({
-  me,
+  member,
+  isMe,
   teamName,
-  myPoints,
-  myDoneTasks,
-  myRecentTasks,
-  myAvg,
-  myTime,
+  points,
+  doneTasks,
+  recentTasks,
+  avg,
+  time,
+  onBack,
 }: Props) {
   const router = useRouter();
-  const [avatarUrl, setAvatarUrl] = useState(me.avatarUrl);
+  const [avatarUrl, setAvatarUrl] = useState(member.avatarUrl);
   const [error, setError] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [, startTransition] = useTransition();
-  const badges = computeBadges(myDoneTasks);
+  const badges = computeBadges(doneTasks);
   const earnedKey = badges
     .filter((b) => b.earned)
     .map((b) => b.id)
     .join(",");
   const [newlyEarned, setNewlyEarned] = useState<typeof badges>(() => {
-    if (typeof window === "undefined") return [];
+    if (!isMe || typeof window === "undefined") return [];
     const seen = new Set<string>(
-      JSON.parse(localStorage.getItem(`badges-seen-${me.id}`) || "[]"),
+      JSON.parse(localStorage.getItem(`badges-seen-${member.id}`) || "[]"),
     );
     return badges.filter((b) => b.earned && !seen.has(b.id));
   });
 
   useEffect(() => {
+    if (!isMe) return;
     localStorage.setItem(
-      `badges-seen-${me.id}`,
+      `badges-seen-${member.id}`,
       JSON.stringify(earnedKey ? earnedKey.split(",") : []),
     );
-  }, [me.id, earnedKey]);
+  }, [isMe, member.id, earnedKey]);
 
   function onFileChange(file: File | null) {
     if (!file) return;
@@ -129,6 +134,26 @@ export function ProfileView({
               ))}
             </div>
           ) : null}
+          {onBack ? (
+            <button
+              onClick={onBack}
+              style={{
+                alignSelf: "flex-start",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                background: "none",
+                border: "none",
+                color: "#7A6A55",
+                fontWeight: 700,
+                fontSize: 14,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              → الرجوع للمتصدرين
+            </button>
+          ) : null}
           <div
             style={{
               background: "#2B2118",
@@ -164,42 +189,44 @@ export function ProfileView({
                 >
                   <Avatar
                     url={avatarUrl}
-                    initial={me.initial}
-                    color={me.color}
+                    initial={member.initial}
+                    color={member.color}
                     size={64}
                     style={{ fontSize: 26, border: "3px solid #F2C94C" }}
                   />
                 </div>
-                <label
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    position: "absolute",
-                    bottom: -2,
-                    insetInlineEnd: -2,
-                    width: 24,
-                    height: 24,
-                    borderRadius: 999,
-                    background: "#F2C94C",
-                    color: "#4A3600",
-                    display: "grid",
-                    placeItems: "center",
-                    fontSize: 13,
-                    border: "2px solid #2B2118",
-                    cursor: "pointer",
-                  }}
-                  title="تغيير الصورة الشخصية"
-                >
-                  ✏️
-                  <input
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-                    style={{ display: "none" }}
-                  />
-                </label>
+                {isMe ? (
+                  <label
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: "absolute",
+                      bottom: -2,
+                      insetInlineEnd: -2,
+                      width: 24,
+                      height: 24,
+                      borderRadius: 999,
+                      background: "#F2C94C",
+                      color: "#4A3600",
+                      display: "grid",
+                      placeItems: "center",
+                      fontSize: 13,
+                      border: "2px solid #2B2118",
+                      cursor: "pointer",
+                    }}
+                    title="تغيير الصورة الشخصية"
+                  >
+                    ✏️
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
+                      style={{ display: "none" }}
+                    />
+                  </label>
+                ) : null}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 800, fontSize: 21 }}>{me.name}</div>
+                <div style={{ fontWeight: 800, fontSize: 21 }}>{member.name}</div>
                 <div
                   style={{ fontSize: 13.5, color: "#C9C0B4", fontWeight: 500 }}
                 >
@@ -215,7 +242,7 @@ export function ProfileView({
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 30, fontWeight: 800, color: "#F2C94C" }}>
-                  {myPoints}
+                  {points}
                 </div>
                 <div
                   style={{ fontSize: 12.5, color: "#C9C0B4", fontWeight: 600 }}
@@ -270,9 +297,9 @@ export function ProfileView({
             }}
           >
             {[
-              [myDoneTasks.length, "مهمة منجزة", "#FF6B57"],
-              [`${myAvg} ★`, "متوسط التقييم", "#B87A00"],
-              [myTime, "متوسط الوقت", "#0E8A7D"],
+              [doneTasks.length, "مهمة منجزة", "#FF6B57"],
+              [`${avg} ★`, "متوسط التقييم", "#B87A00"],
+              [time, "متوسط الوقت", "#0E8A7D"],
             ].map(([val, label, color]) => (
               <div
                 key={String(label)}
@@ -311,7 +338,7 @@ export function ProfileView({
                 marginBottom: 10,
               }}
             >
-              آخر مهامي
+              {isMe ? "آخر مهامي" : `آخر مهام ${member.name}`}
             </div>
             <div
               style={{
@@ -321,7 +348,7 @@ export function ProfileView({
                 fontSize: 14,
               }}
             >
-              {myRecentTasks.map((mt) => (
+              {recentTasks.map((mt) => (
                 <div
                   key={mt.id}
                   style={{ display: "flex", alignItems: "center", gap: 10 }}
@@ -353,7 +380,7 @@ export function ProfileView({
                   )}
                 </div>
               ))}
-              {myRecentTasks.length === 0 ? (
+              {recentTasks.length === 0 ? (
                 <div style={{ color: "#9A8A73", fontWeight: 600 }}>
                   لا توجد مهام منجزة بعد
                 </div>
@@ -378,7 +405,7 @@ export function ProfileView({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={avatarUrl}
-                alt={me.name}
+                alt={member.name}
                 style={{
                   maxWidth: "min(90vw, 480px)",
                   maxHeight: "80vh",
