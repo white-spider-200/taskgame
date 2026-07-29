@@ -28,6 +28,7 @@ export function PlaygroundNav({
 
   return (
       <div
+        className="no-print"
         style={{
           display: "flex",
           alignItems: "center",
@@ -68,6 +69,7 @@ export function PlaygroundNav({
               ["dash", "لوحة الإنجاز"],
               ["leaders", "المتصدرون"],
               ["history", "الأرشيف"],
+              ["report", "التقرير الأسبوعي"],
               ["profile", "ملفي"],
             ] as const
           ).map(([v, label]) => (

@@ -2,6 +2,10 @@
 
 # dependencies
 /node_modules
+
+# mcp client config (contains credentials)
+/.cursor/mcp.json
+/mcp-server/http.env
 /.pnp
 .pnp.*
 .yarn/*

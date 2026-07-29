@@ -78,9 +78,19 @@ async function validateAndSaveFiles(
       };
     }
 
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (kind === "image") {
+      const sharp = (await import("sharp")).default;
+      try {
+        // .stats() forces a full pixel decode, catching corrupt/truncated
+        // image data that .metadata() (header-only) would miss.
+        await sharp(buffer).stats();
+      } catch {
+        return { error: "الصورة تالفة أو غير صالحة، جرّب رفع صورة أخرى" };
+      }
+    }
     const safeName = `${taskId}-${Date.now()}-${saved.length}.${ext}`;
     const diskPath = path.join(uploadsDir, safeName);
-    const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(diskPath, buffer);
     saved.push({ url: `/uploads/${safeName}`, name: file.name || safeName, kind });
   }

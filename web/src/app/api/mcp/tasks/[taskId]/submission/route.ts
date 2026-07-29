@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "fs/promises";
+import { unlink, mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/db";
@@ -15,7 +15,7 @@ const MAX_IMAGES_PER_SUBMISSION = 5;
 
 type ImageInput = { name?: string; mime: string; dataBase64: string };
 
-export async function POST(
+export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ taskId: string }> },
 ) {
@@ -24,27 +24,27 @@ export async function POST(
 
   const { taskId } = await params;
   const body = await req.json().catch(() => null);
-  const text = String(body?.text || "").trim();
+  const text = body?.text !== undefined ? String(body.text).trim() : undefined;
   const images: ImageInput[] = Array.isArray(body?.images) ? body.images : [];
+  const removeFileIds: string[] = Array.isArray(body?.removeFileIds) ? body.removeFileIds : [];
 
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    include: { submission: true },
+    include: { submission: { include: { files: true } } },
   });
   if (!task) return json({ error: "المهمة غير موجودة" }, { status: 404 });
   if (task.ownerId !== user.id) {
-    return json({ error: "فقط صاحب المهمة يمكنه إنهاؤها" }, { status: 403 });
+    return json({ error: "فقط صاحب المهمة يمكنه تعديل إثباتها" }, { status: 403 });
   }
-  if (task.status !== "running") {
-    return json({ error: "المهمة ليست قيد التنفيذ" }, { status: 400 });
-  }
-  if (task.submission) {
-    return json({ error: "تم إرفاق إثبات لهذه المهمة مسبقًا" }, { status: 400 });
-  }
-  if (!text && images.length === 0) {
+  if (!task.submission) return json({ error: "لا يوجد إثبات لتعديله بعد" }, { status: 400 });
+
+  const keptFiles = task.submission.files.filter((f) => !removeFileIds.includes(f.id));
+  const finalText = text !== undefined ? text : task.submission.text;
+
+  if (!finalText && keptFiles.length === 0 && images.length === 0) {
     return json({ error: "أرفق نصًا أو صورة كإثبات للعمل" }, { status: 400 });
   }
-  if (images.length > MAX_IMAGES_PER_SUBMISSION) {
+  if (keptFiles.length + images.length > MAX_IMAGES_PER_SUBMISSION) {
     return json(
       { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` },
       { status: 400 },
@@ -80,29 +80,40 @@ export async function POST(
     saved.push({ url: `/uploads/${safeName}`, name: img.name || safeName, kind: "image" });
   }
 
-  const type = text && saved.length ? "both" : saved.length ? "media" : "text";
-  const elapsedMs = Date.now() - task.startedAt.getTime();
+  const filesToRemove = task.submission.files.filter((f) => removeFileIds.includes(f.id));
+  for (const f of filesToRemove) {
+    await unlink(path.join(process.cwd(), "public", f.url)).catch(() => {});
+  }
+
+  const totalFiles = keptFiles.length + saved.length;
+  const type = finalText && totalFiles ? "both" : totalFiles ? "media" : "text";
 
   await prisma.$transaction([
-    prisma.submission.create({
-      data: { taskId, type, text, files: { create: saved } },
-    }),
-    prisma.task.update({
-      where: { id: taskId },
-      data: { status: "review", elapsedMs },
+    ...(filesToRemove.length
+      ? [
+          prisma.submissionFile.deleteMany({
+            where: { id: { in: filesToRemove.map((f) => f.id) } },
+          }),
+        ]
+      : []),
+    prisma.submission.update({
+      where: { taskId },
+      data: { type, text: finalText, files: { create: saved } },
     }),
   ]);
 
-  revalidatePath(`/t/${task.teamId}`);
+  const submission = await prisma.submission.findUniqueOrThrow({
+    where: { taskId },
+    include: { files: true },
+  });
 
+  revalidatePath(`/t/${task.teamId}`);
   return json({
     ok: true,
-    elapsedMs,
-    task: { id: task.id, status: "review" },
-    nextSteps: [
-      "تنتظر المهمة الآن تقييم أحد زملائك في الفريق (لا يمكنك تقييم مهمتك)",
-      "استخدم create_task لبدء مهمة جديدة",
-      "استخدم get_team لعرض حالة الفريق والمتصدرين",
-    ],
+    submission: {
+      type: submission.type,
+      text: submission.text,
+      files: submission.files.map((f) => ({ id: f.id, url: f.url, name: f.name, kind: f.kind })),
+    },
   });
 }

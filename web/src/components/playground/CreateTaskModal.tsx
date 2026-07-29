@@ -111,6 +111,7 @@ export function CreateTaskModal({
                 عنوان المهمة
               </label>
               <input
+                dir="auto"
                 value={formTitle}
                 onChange={(e) => {
                   onTitleChange(e.target.value);

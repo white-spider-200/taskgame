@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
+import { CodeBlock } from "@/components/CodeBlock";
+import { looksLikeCode } from "@/lib/code";
 import {
   RATING_LABELS,
   fmtTimer,
@@ -25,6 +27,7 @@ type Props = {
   ratings: Record<string, number>;
   onSetRating: (taskId: string, stars: number) => void;
   onRate: (id: string) => void;
+  onDelete: (id: string) => void;
 };
 
 export function TasksView({
@@ -44,6 +47,7 @@ export function TasksView({
   ratings,
   onSetRating,
   onRate,
+  onDelete,
 }: Props) {
   function filterStyle(f: Filter) {
     const on = filter === f;
@@ -207,6 +211,7 @@ export function TasksView({
                       }}
                     >
                       <div
+                        dir="auto"
                         style={{
                           fontWeight: 700,
                           fontSize: 17,
@@ -267,6 +272,26 @@ export function TasksView({
                       >
                         إنهاء ✓
                       </Link>
+                    ) : null}
+
+                    {t.status === "running" && isMine ? (
+                      <button
+                        type="button"
+                        onClick={() => onDelete(t.id)}
+                        style={{
+                          background: "#FFF",
+                          color: "#E0473C",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          padding: "7px 14px",
+                          borderRadius: 999,
+                          border: "2px solid #FFC9C2",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        حذف 🗑
+                      </button>
                     ) : null}
 
                     {t.status === "done" ? (
@@ -391,44 +416,61 @@ export function TasksView({
                         ) : null}
                       </div>
                       {t.submission.text ? (
+                        looksLikeCode(t.submission.text) ? (
+                          <CodeBlock code={t.submission.text} />
+                        ) : (
+                          <div
+                            dir="auto"
+                            style={{
+                              fontSize: 14.5,
+                              color: "#2B2118",
+                              fontWeight: 500,
+                              whiteSpace: "pre-wrap",
+                            }}
+                          >
+                            {t.submission.text}
+                          </div>
+                        )
+                      ) : null}
+                      {t.submission.files.length ? (
                         <div
                           style={{
-                            fontSize: 14.5,
-                            color: "#2B2118",
-                            fontWeight: 500,
-                            whiteSpace: "pre-wrap",
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                            gap: 8,
                           }}
                         >
-                          {t.submission.text}
+                          {t.submission.files.map((f) =>
+                            f.kind === "video" ? (
+                              <video
+                                key={f.id}
+                                src={f.url}
+                                controls
+                                style={{
+                                  width: "100%",
+                                  maxHeight: 220,
+                                  borderRadius: 12,
+                                  border: "1px solid #FFE3B3",
+                                  background: "#FFF",
+                                }}
+                              />
+                            ) : (
+                              <img
+                                key={f.id}
+                                src={f.url}
+                                alt="إثبات المهمة"
+                                style={{
+                                  width: "100%",
+                                  maxHeight: 220,
+                                  borderRadius: 12,
+                                  objectFit: "contain",
+                                  border: "1px solid #FFE3B3",
+                                  background: "#FFF",
+                                }}
+                              />
+                            ),
+                          )}
                         </div>
-                      ) : null}
-                      {t.submission.fileUrl ? (
-                        /\.(mp4|webm|mov)$/i.test(t.submission.fileUrl) ? (
-                          <video
-                            src={t.submission.fileUrl}
-                            controls
-                            style={{
-                              maxWidth: "100%",
-                              maxHeight: 280,
-                              borderRadius: 12,
-                              border: "1px solid #FFE3B3",
-                              background: "#FFF",
-                            }}
-                          />
-                        ) : (
-                          <img
-                            src={t.submission.fileUrl}
-                            alt="إثبات المهمة"
-                            style={{
-                              maxWidth: "100%",
-                              maxHeight: 280,
-                              borderRadius: 12,
-                              objectFit: "contain",
-                              border: "1px solid #FFE3B3",
-                              background: "#FFF",
-                            }}
-                          />
-                        )
                       ) : null}
                     </div>
                   ) : null}

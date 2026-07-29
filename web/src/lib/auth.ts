@@ -26,11 +26,7 @@ export async function verifyPassword(password: string, hash: string) {
 }
 
 export async function createSession(userId: string) {
-  const token = await new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("30d")
-    .sign(secret());
+  const token = await createSessionToken(userId);
 
   const jar = await cookies();
   jar.set(COOKIE, token, {
@@ -47,11 +43,7 @@ export async function destroySession() {
   jar.delete(COOKIE);
 }
 
-export async function getSessionUser(): Promise<SessionUser | null> {
-  const jar = await cookies();
-  const token = jar.get(COOKIE)?.value;
-  if (!token) return null;
-
+async function userFromToken(token: string): Promise<SessionUser | null> {
   try {
     const { payload } = await jwtVerify(token, secret());
     const id = payload.sub;
@@ -68,6 +60,30 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   } catch {
     return null;
   }
+}
+
+export async function getSessionUser(): Promise<SessionUser | null> {
+  const jar = await cookies();
+  const token = jar.get(COOKIE)?.value;
+  if (!token) return null;
+  return userFromToken(token);
+}
+
+export async function createSessionToken(userId: string) {
+  return new SignJWT({ sub: userId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("30d")
+    .sign(secret());
+}
+
+// Used by the MCP API routes, which authenticate via `Authorization: Bearer <token>`
+// instead of the browser session cookie.
+export async function getBearerUser(req: Request): Promise<SessionUser | null> {
+  const header = req.headers.get("authorization") || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  if (!token) return null;
+  return userFromToken(token);
 }
 
 export async function requireUser() {

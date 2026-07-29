@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { updateAvatarAction } from "@/app/actions";
@@ -9,6 +10,7 @@ import { fmtDur, starsStr } from "@/lib/format";
 import type { TaskDTO, TeamMember } from "@/lib/team";
 
 type Props = {
+  teamId: string;
   member: TeamMember;
   isMe: boolean;
   teamName: string;
@@ -21,6 +23,7 @@ type Props = {
 };
 
 export function ProfileView({
+  teamId,
   member,
   isMe,
   teamName,
@@ -349,11 +352,22 @@ export function ProfileView({
               }}
             >
               {recentTasks.map((mt) => (
-                <div
+                <Link
                   key={mt.id}
-                  style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  href={`/t/${teamId}/task/${mt.id}`}
+                  className="btn-anim"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    textDecoration: "none",
+                    borderRadius: 10,
+                    padding: "6px 8px",
+                    margin: "-6px -8px",
+                    cursor: "pointer",
+                  }}
                 >
-                  <span style={{ flex: 1, fontWeight: 600, color: "#2B2118" }}>
+                  <span dir="auto" style={{ flex: 1, fontWeight: 600, color: "#2B2118" }}>
                     {mt.title}
                   </span>
                   <span style={{ color: "#9A8A73", fontWeight: 500 }}>
@@ -378,7 +392,8 @@ export function ProfileView({
                       {starsStr(Math.round(mt.stars || 0))}
                     </span>
                   )}
-                </div>
+                  <span style={{ color: "#C9B8A0", fontSize: 13 }}>‹</span>
+                </Link>
               ))}
               {recentTasks.length === 0 ? (
                 <div style={{ color: "#9A8A73", fontWeight: 600 }}>

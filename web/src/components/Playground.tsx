@@ -12,6 +12,7 @@ import { HistoryView } from "./playground/HistoryView";
 import { LeadersView } from "./playground/LeadersView";
 import { PlaygroundNav } from "./playground/PlaygroundNav";
 import { ProfileView } from "./playground/ProfileView";
+import { ReportView } from "./playground/ReportView";
 import { TasksView } from "./playground/TasksView";
 import { Toast } from "./playground/Toast";
 import type { Filter, View } from "./playground/types";
@@ -107,8 +108,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       (todayDoneTasks.length / Math.max(1, todayTasks.length)) * 100,
     ) + "%";
 
-  // Today-scoped: powers the dashboard's "who did what" panel AND the leaderboard,
-  // so both reset daily — pts here counts only stars earned on today's tasks.
+  // Today-scoped: powers the dashboard's "who did what" panel — resets daily.
   const todayStats = members.map((u) => {
     const mine = todayDoneTasks.filter((t) => t.ownerId === u.id);
     const avg = mine.length
@@ -160,7 +160,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     bg: m.id === me.id ? "#FFFBF0" : "#FFFFFF",
   }));
 
-  // Month-scoped: powers "موظف الشهر" — best point total among tasks finished this month.
+  // Month-scoped: powers "موظف الشهر" — total points among tasks finished this month.
   const currentMonthKey = monthKey(new Date().toISOString());
   const monthDoneTasks = doneTasks.filter(
     (t) => t.completedAt != null && monthKey(t.completedAt) === currentMonthKey,
@@ -175,6 +175,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       return { ...u, count: mine.length, pts };
     })
     .sort((a, b) => b.pts - a.pts);
+
   const employeeOfMonth =
     monthStats[0] && monthStats[0].pts > 0
       ? {
@@ -411,9 +412,14 @@ export function Playground({ initial }: { initial: TeamPayload }) {
         <HistoryView tasks={archivedTasks} memberMap={memberMap} />
       ) : null}
 
+      {view === "report" ? (
+        <ReportView teamName={data.team.name} tasks={archivedTasks} members={members} />
+      ) : null}
+
       {view === "profile" ? (
         <ProfileView
           key={profileMemberId}
+          teamId={data.team.id}
           member={profileStats.member}
           isMe={profileMemberId === me.id}
           teamName={data.team.name}

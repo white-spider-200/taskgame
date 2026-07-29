@@ -9,11 +9,17 @@ export type TeamMember = {
   basePoints: number;
 };
 
+export type SubmissionFileDTO = {
+  id: string;
+  url: string;
+  name: string;
+  kind: "image" | "video";
+};
+
 export type SubmissionDTO = {
-  type: "text" | "image" | "video" | "both";
+  type: "text" | "image" | "video" | "both" | "media";
   text: string;
-  fileUrl: string | null;
-  fileName: string | null;
+  files: SubmissionFileDTO[];
 };
 
 export type TaskDTO = {
@@ -98,7 +104,7 @@ export async function getTeamPayload(
     include: {
       ratings: { include: { rater: true } },
       owner: true,
-      submission: true,
+      submission: { include: { files: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -131,8 +137,12 @@ export async function getTeamPayload(
       ? {
           type: t.submission.type as SubmissionDTO["type"],
           text: t.submission.text,
-          fileUrl: t.submission.fileUrl,
-          fileName: t.submission.fileName,
+          files: t.submission.files.map((f) => ({
+            id: f.id,
+            url: f.url,
+            name: f.name,
+            kind: f.kind as "image" | "video",
+          })),
         }
       : null,
   }));

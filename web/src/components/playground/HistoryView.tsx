@@ -131,6 +131,7 @@ export function HistoryView({ tasks, memberMap }: Props) {
                   />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div
+                      dir="auto"
                       style={{ fontWeight: 700, fontSize: 16, color: "#2B2118" }}
                     >
                       {t.title}

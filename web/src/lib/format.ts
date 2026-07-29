@@ -81,6 +81,31 @@ export function monthLabel(key: string) {
   return MONTH_LABEL_FMT.format(new Date(y!, m! - 1, 1));
 }
 
+// Weeks start on Saturday (common convention for Arabic-locale calendars).
+export function startOfWeek(d: Date) {
+  const day = d.getDay(); // 0 = Sunday ... 6 = Saturday
+  const diff = (day + 1) % 7; // days since last Saturday
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+  return start;
+}
+
+export function weekKey(iso: string) {
+  return startOfWeek(new Date(iso)).toLocaleDateString("en-CA");
+}
+
+const WEEK_LABEL_FMT = new Intl.DateTimeFormat("ar", {
+  day: "numeric",
+  month: "long",
+});
+
+export function weekLabel(key: string) {
+  const [y, m, d] = key.split("-").map(Number);
+  const start = new Date(y!, m! - 1, d!);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  return `${WEEK_LABEL_FMT.format(start)} – ${WEEK_LABEL_FMT.format(end)}`;
+}
+
 export function initialFromName(name: string) {
   const trimmed = name.trim();
   return trimmed ? trimmed[0]! : "?";

@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import {
+  deleteTaskAction,
   editSubmissionAction,
   finishTaskAction,
   rateTaskAction,
 } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
+import { CodeBlock } from "@/components/CodeBlock";
 import { FileDropZone } from "@/components/FileDropZone";
+import { looksLikeCode } from "@/lib/code";
 import {
   CATEGORY_ICONS,
   RATING_LABELS,
@@ -38,10 +41,14 @@ export function TaskDetail({
   const [toast, setToast] = useState("");
   const [tick, setTick] = useState(0);
   const [proofText, setProofText] = useState("");
-  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
-  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editFiles, setEditFiles] = useState<File[]>([]);
+  const [lightbox, setLightbox] = useState<{ url: string; kind: "image" | "video" } | null>(
+    null,
+  );
+  const [removeFileIds, setRemoveFileIds] = useState<string[]>([]);
   const [rating, setRating] = useState<number | null>(null);
   const [, startTransition] = useTransition();
 
@@ -67,6 +74,15 @@ export function TaskDetail({
     }, 5000);
     return () => clearInterval(id);
   }, [router]);
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
 
   void tick;
 
@@ -96,14 +112,14 @@ export function TaskDetail({
 
   function onFinishSubmit() {
     const text = proofText.trim();
-    if (!text && !proofFile) {
+    if (!text && proofFiles.length === 0) {
       showToast("أرفق نصًا أو صورة كإثبات للعمل", "error");
       return;
     }
     const fd = new FormData();
     fd.set("taskId", taskId);
     fd.set("text", text);
-    if (proofFile) fd.set("file", proofFile);
+    for (const f of proofFiles) fd.append("files", f);
 
     startTransition(async () => {
       const res = await finishTaskAction(fd);
@@ -130,22 +146,42 @@ export function TaskDetail({
     });
   }
 
+  function onDelete() {
+    if (!window.confirm("هل تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء.")) {
+      return;
+    }
+    startTransition(async () => {
+      const res = await deleteTaskAction(taskId);
+      if (res?.error) {
+        showToast(res.error, "error");
+        return;
+      }
+      router.push(`/t/${teamId}`);
+      router.refresh();
+    });
+  }
+
   function openEditForm() {
     setEditText(task?.submission?.text ?? "");
-    setEditFile(null);
+    setEditFiles([]);
+    setRemoveFileIds([]);
     setEditing(true);
   }
 
   function onEditSubmit() {
     const text = editText.trim();
-    if (!text && !editFile && !task?.submission?.fileUrl) {
+    const remainingExisting = (task?.submission?.files ?? []).filter(
+      (f) => !removeFileIds.includes(f.id),
+    );
+    if (!text && editFiles.length === 0 && remainingExisting.length === 0) {
       showToast("أرفق نصًا أو صورة كإثبات للعمل", "error");
       return;
     }
     const fd = new FormData();
     fd.set("taskId", taskId);
     fd.set("text", text);
-    if (editFile) fd.set("file", editFile);
+    for (const f of editFiles) fd.append("files", f);
+    if (removeFileIds.length) fd.set("removeFileIds", removeFileIds.join(","));
 
     startTransition(async () => {
       const res = await editSubmissionAction(fd);
@@ -226,6 +262,7 @@ export function TaskDetail({
         </Link>
 
         <div
+          className="proof-card"
           style={{
             background: "#FFF",
             border: "2px solid #FFE3B3",
@@ -245,7 +282,7 @@ export function TaskDetail({
               style={{ fontSize: 18 }}
             />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 21, color: "#2B2118" }}>
+              <div dir="auto" style={{ fontWeight: 800, fontSize: 21, color: "#2B2118" }}>
                 {task.title}
               </div>
               <div style={{ fontSize: 13.5, color: "#9A8A73", fontWeight: 600 }}>
@@ -272,6 +309,26 @@ export function TaskDetail({
                 ⏱ {fmtTimer(Date.now() - new Date(task.startedAt).getTime())}
               </div>
             ) : null}
+            {task.status === "running" && isMine ? (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="btn-anim"
+                style={{
+                  background: "#FFF",
+                  color: "#E0473C",
+                  fontWeight: 700,
+                  fontSize: 13,
+                  padding: "7px 14px",
+                  borderRadius: 999,
+                  border: "2px solid #FFC9C2",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                حذف 🗑
+              </button>
+            ) : null}
             {task.status === "done" ? (
               <div style={{ textAlign: "left" }}>
                 <div
@@ -292,6 +349,7 @@ export function TaskDetail({
             ) : null}
             {task.status === "review" ? (
               <div
+                className="badge-pulse"
                 style={{
                   background: "#F7F3FF",
                   border: "2px solid #C9B8F5",
@@ -322,6 +380,7 @@ export function TaskDetail({
           {/* Owner: submit proof to finish the task */}
           {task.status === "running" && isMine ? (
             <div
+              className="proof-card"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -336,6 +395,7 @@ export function TaskDetail({
                 أرفق إثبات العمل (نص و/أو صورة أو فيديو)
               </div>
               <textarea
+                dir="auto"
                 value={proofText}
                 onChange={(e) => setProofText(e.target.value)}
                 placeholder="ماذا أنجزت؟ اكتب وصفًا مختصرًا..."
@@ -353,10 +413,10 @@ export function TaskDetail({
                 }}
               />
               <FileDropZone
-                file={proofFile}
-                onFileChange={setProofFile}
+                files={proofFiles}
+                onFilesChange={setProofFiles}
                 accept={FILE_ACCEPT}
-                label="تحميل صورة أو فيديو إثبات"
+                label="تحميل صور أو فيديوهات إثبات"
                 accent="#1FB6A6"
                 accentDeep="#0E8A7D"
               />
@@ -364,6 +424,7 @@ export function TaskDetail({
                 <button
                   type="button"
                   onClick={onFinishSubmit}
+                  className="btn-anim"
                   style={{
                     background: "#1FB6A6",
                     color: "#FFF",
@@ -386,6 +447,7 @@ export function TaskDetail({
           {/* Submission read view + owner edit */}
           {task.submission && (task.status === "review" || task.status === "done") ? (
             <div
+              className="proof-card"
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -404,6 +466,7 @@ export function TaskDetail({
                   <button
                     type="button"
                     onClick={openEditForm}
+                    className="btn-anim"
                     style={{
                       background: "#FFF",
                       color: "#B87A00",
@@ -424,49 +487,100 @@ export function TaskDetail({
               {!editing ? (
                 <>
                   {task.submission.text ? (
+                    looksLikeCode(task.submission.text) ? (
+                      <CodeBlock code={task.submission.text} />
+                    ) : (
+                      <div
+                        dir="auto"
+                        style={{
+                          fontSize: 15,
+                          color: "#2B2118",
+                          fontWeight: 500,
+                          whiteSpace: "pre-wrap",
+                        }}
+                      >
+                        {task.submission.text}
+                      </div>
+                    )
+                  ) : null}
+                  {task.submission.files.length ? (
                     <div
                       style={{
-                        fontSize: 15,
-                        color: "#2B2118",
-                        fontWeight: 500,
-                        whiteSpace: "pre-wrap",
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+                        gap: 10,
                       }}
                     >
-                      {task.submission.text}
+                      {task.submission.files.map((f, i) =>
+                        f.kind === "video" ? (
+                          <div
+                            key={f.id}
+                            style={{ position: "relative", animationDelay: `${i * 0.05}s` }}
+                            className="thumb-pop"
+                          >
+                            <video
+                              src={f.url}
+                              controls
+                              style={{
+                                width: "100%",
+                                maxHeight: 260,
+                                borderRadius: 12,
+                                border: "1px solid #FFE3B3",
+                                background: "#FFF",
+                                display: "block",
+                              }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setLightbox({ url: f.url, kind: "video" })}
+                              aria-label="تكبير الفيديو"
+                              style={{
+                                position: "absolute",
+                                top: 8,
+                                insetInlineStart: 8,
+                                background: "rgba(43,33,24,0.65)",
+                                color: "#FFF",
+                                border: "none",
+                                borderRadius: 8,
+                                width: 28,
+                                height: 28,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                cursor: "zoom-in",
+                                fontSize: 14,
+                              }}
+                            >
+                              ⛶
+                            </button>
+                          </div>
+                        ) : (
+                          <img
+                            key={f.id}
+                            src={f.url}
+                            alt="إثبات المهمة"
+                            onClick={() => setLightbox({ url: f.url, kind: "image" })}
+                            className="thumb-pop"
+                            style={{
+                              width: "100%",
+                              maxHeight: 260,
+                              borderRadius: 12,
+                              objectFit: "contain",
+                              border: "1px solid #FFE3B3",
+                              background: "#FFF",
+                              animationDelay: `${i * 0.05}s`,
+                              cursor: "zoom-in",
+                            }}
+                          />
+                        ),
+                      )}
                     </div>
-                  ) : null}
-                  {task.submission.fileUrl ? (
-                    /\.(mp4|webm|mov)$/i.test(task.submission.fileUrl) ? (
-                      <video
-                        src={task.submission.fileUrl}
-                        controls
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: 420,
-                          borderRadius: 12,
-                          border: "1px solid #FFE3B3",
-                          background: "#FFF",
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src={task.submission.fileUrl}
-                        alt="إثبات المهمة"
-                        style={{
-                          maxWidth: "100%",
-                          maxHeight: 420,
-                          borderRadius: 12,
-                          objectFit: "contain",
-                          border: "1px solid #FFE3B3",
-                          background: "#FFF",
-                        }}
-                      />
-                    )
                   ) : null}
                 </>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   <textarea
+                    dir="auto"
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
                     placeholder="ماذا أنجزت؟ اكتب وصفًا مختصرًا..."
@@ -484,19 +598,24 @@ export function TaskDetail({
                     }}
                   />
                   <FileDropZone
-                    file={editFile}
-                    onFileChange={setEditFile}
+                    files={editFiles}
+                    onFilesChange={setEditFiles}
                     accept={FILE_ACCEPT}
-                    label="استبدال الصورة أو الفيديو"
+                    label="إضافة صور أو فيديوهات"
                     accent="#F2C94C"
                     accentDeep="#B87A00"
-                    currentUrl={task.submission.fileUrl}
-                    currentFileName={task.submission.fileName}
+                    existingFiles={task.submission.files.filter(
+                      (f) => !removeFileIds.includes(f.id),
+                    )}
+                    onRemoveExisting={(id) =>
+                      setRemoveFileIds((ids) => [...ids, id])
+                    }
                   />
                   <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
+                      className="btn-anim"
                       style={{
                         background: "#FFF",
                         color: "#7A6A55",
@@ -514,6 +633,7 @@ export function TaskDetail({
                     <button
                       type="button"
                       onClick={onEditSubmit}
+                      className="btn-anim"
                       style={{
                         background: "#F2C94C",
                         color: "#4A3600",
@@ -557,6 +677,7 @@ export function TaskDetail({
                   <span
                     key={i}
                     onClick={() => setRating(i)}
+                    className="star-anim"
                     style={{
                       cursor: "pointer",
                       color:
@@ -576,6 +697,7 @@ export function TaskDetail({
               <button
                 type="button"
                 onClick={onRate}
+                className="btn-anim"
                 style={{
                   marginInlineStart: "auto",
                   background: rating ?? task.myRating ? "#8B5CF6" : "#C9B8F5",
@@ -596,6 +718,71 @@ export function TaskDetail({
           ) : null}
         </div>
       </div>
+
+      {lightbox ? (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(20,14,8,0.88)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+            cursor: "zoom-out",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            aria-label="إغلاق"
+            style={{
+              position: "absolute",
+              top: 18,
+              insetInlineEnd: 22,
+              background: "rgba(255,255,255,0.15)",
+              color: "#FFF",
+              border: "none",
+              borderRadius: 999,
+              width: 38,
+              height: 38,
+              fontSize: 18,
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+          {lightbox.kind === "video" ? (
+            <video
+              src={lightbox.url}
+              controls
+              autoPlay
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "90vh",
+                borderRadius: 12,
+                background: "#000",
+              }}
+            />
+          ) : (
+            <img
+              src={lightbox.url}
+              alt="إثبات المهمة مكبّر"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "90vh",
+                borderRadius: 12,
+                objectFit: "contain",
+                cursor: "default",
+              }}
+            />
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
