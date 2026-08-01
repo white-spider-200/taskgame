@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { randomBytes, createHash } from "crypto";
 import { prisma } from "./db";
 
 const COOKIE = "tg_session";
@@ -90,4 +91,46 @@ export async function requireUser() {
   const user = await getSessionUser();
   if (!user) throw new Error("UNAUTHORIZED");
   return user;
+}
+
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
+
+function hashToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+// Returns the raw token (to embed in a reset link) or null if no account
+// exists for this email. Callers must not reveal which case occurred.
+export async function createPasswordResetToken(email: string) {
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) return null;
+
+  const token = randomBytes(32).toString("hex");
+  await prisma.passwordResetToken.create({
+    data: {
+      tokenHash: hashToken(token),
+      userId: user.id,
+      expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+    },
+  });
+  return token;
+}
+
+export async function resetPasswordWithToken(token: string, newPassword: string) {
+  const record = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash: hashToken(token) },
+  });
+  if (!record || record.usedAt || record.expiresAt < new Date()) return false;
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.userId },
+      data: { passwordHash: await hashPassword(newPassword) },
+    }),
+    prisma.passwordResetToken.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    }),
+  ]);
+  return true;
 }

@@ -20,8 +20,21 @@ model User {
   memberships  Membership[]
   ownedTasks   Task[]       @relation("TaskOwner")
   ratingsGiven Rating[]     @relation("RatingsGiven")
+  resetTokens  PasswordResetToken[]
 
   @@index([email])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Team {
@@ -38,6 +51,7 @@ model Membership {
   id         String   @id @default(cuid())
   role       String   @default("member")
   basePoints Int      @default(0)
+  blocked    Boolean  @default(false)
   userId     String
   teamId     String
   createdAt  DateTime @default(now())
@@ -73,14 +87,15 @@ model Task {
 }
 
 model Submission {
-  id        String           @id @default(cuid())
-  taskId    String           @unique
-  type      String
-  text      String           @default("")
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  task      Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  files     SubmissionFile[]
+  id         String           @id @default(cuid())
+  taskId     String           @unique
+  type       String
+  text       String           @default("")
+  textFormat String           @default("auto")
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  task       Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  files      SubmissionFile[]
 }
 
 model SubmissionFile {

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
-import { CodeBlock } from "@/components/CodeBlock";
-import { looksLikeCode } from "@/lib/code";
+import { ExcelPreview } from "@/components/ExcelPreview";
+import { linkifyText } from "@/components/Linkify";
+import { SubmissionText } from "@/components/SubmissionText";
 import {
   RATING_LABELS,
   fmtTimer,
@@ -206,7 +207,7 @@ export function TasksView({
                         flexDirection: "column",
                         gap: 2,
                         flex: 1,
-                        minWidth: 0,
+                        minWidth: 180,
                         textDecoration: "none",
                       }}
                     >
@@ -216,6 +217,8 @@ export function TasksView({
                           fontWeight: 700,
                           fontSize: 17,
                           color: "#2B2118",
+                          wordBreak: "break-word",
+                          overflowWrap: "anywhere",
                         }}
                       >
                         {t.title}
@@ -358,9 +361,16 @@ export function TasksView({
                         fontWeight: 500,
                         marginInlineStart: 58,
                         marginTop: -6,
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                        maxHeight: 96,
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        paddingInlineEnd: 4,
                       }}
                     >
-                      {t.desc}
+                      {linkifyText(t.desc)}
                     </div>
                   ) : null}
 
@@ -416,23 +426,29 @@ export function TasksView({
                         ) : null}
                       </div>
                       {t.submission.text ? (
-                        looksLikeCode(t.submission.text) ? (
-                          <CodeBlock code={t.submission.text} />
-                        ) : (
-                          <div
-                            dir="auto"
-                            style={{
-                              fontSize: 14.5,
-                              color: "#2B2118",
-                              fontWeight: 500,
-                              whiteSpace: "pre-wrap",
-                            }}
-                          >
-                            {t.submission.text}
-                          </div>
-                        )
+                        <div
+                          style={{
+                            maxHeight: 220,
+                            overflowY: "auto",
+                            overflowX: "auto",
+                            wordBreak: "break-word",
+                            overflowWrap: "anywhere",
+                            paddingInlineEnd: 4,
+                          }}
+                        >
+                          <SubmissionText text={t.submission.text} format={t.submission.textFormat} />
+                        </div>
                       ) : null}
-                      {t.submission.files.length ? (
+                      {t.submission.files.some((f) => f.kind === "spreadsheet") ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {t.submission.files
+                            .filter((f) => f.kind === "spreadsheet")
+                            .map((f) => (
+                              <ExcelPreview key={f.id} url={f.url} name={f.name} />
+                            ))}
+                        </div>
+                      ) : null}
+                      {t.submission.files.some((f) => f.kind !== "spreadsheet") ? (
                         <div
                           style={{
                             display: "grid",
@@ -440,7 +456,9 @@ export function TasksView({
                             gap: 8,
                           }}
                         >
-                          {t.submission.files.map((f) =>
+                          {t.submission.files
+                            .filter((f) => f.kind !== "spreadsheet")
+                            .map((f) =>
                             f.kind === "video" ? (
                               <video
                                 key={f.id}

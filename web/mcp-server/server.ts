@@ -158,6 +158,12 @@ export async function createTaskgameServer() {
       inputSchema: {
         taskId: z.string(),
         text: z.string().optional().describe("النص الجديد للإثبات؛ اتركه فارغًا إن أردت الإبقاء على النص الحالي"),
+        format: z
+          .enum(["auto", "code", "text", "markdown"])
+          .optional()
+          .describe(
+            "كيفية عرض النص: auto (تخمين تلقائي)، code (كتلة كود مع تلوين الصياغة)، text (نص عادي)، markdown (ماركداون منسّق). اتركه فارغًا للإبقاء على الإعداد الحالي",
+          ),
         removeFileIds: z.array(z.string()).default([]).describe("معرّفات الصور المراد حذفها من الإثبات"),
         images: z
           .array(
@@ -171,10 +177,10 @@ export async function createTaskgameServer() {
           .describe("صور جديدة تُضاف للإثبات، بحد أقصى 5 صور إجمالًا و15 ميغابايت لكل صورة"),
       },
     },
-    async ({ taskId, text: proofText, removeFileIds, images }) => {
+    async ({ taskId, text: proofText, format, removeFileIds, images }) => {
       const data = await api(`/tasks/${encodeURIComponent(taskId)}/submission`, {
         method: "PATCH",
-        body: JSON.stringify({ text: proofText, removeFileIds, images }),
+        body: JSON.stringify({ text: proofText, textFormat: format, removeFileIds, images }),
       });
       if ("error" in data) return errorText(data.error);
       return text(data);
@@ -190,6 +196,12 @@ export async function createTaskgameServer() {
       inputSchema: {
         taskId: z.string(),
         text: z.string().default("").describe("وصف نصي لما تم إنجازه"),
+        format: z
+          .enum(["auto", "code", "text", "markdown"])
+          .default("auto")
+          .describe(
+            "كيفية عرض النص: auto (تخمين تلقائي إن كان كودًا أم لا)، code (كتلة كود مع تلوين الصياغة)، text (نص عادي)، markdown (ماركداون منسّق)",
+          ),
         images: z
           .array(
             z.object({
@@ -202,10 +214,10 @@ export async function createTaskgameServer() {
           .describe("صور اختيارية كإثبات، حتى 5 صور و15 ميغابايت لكل صورة"),
       },
     },
-    async ({ taskId, text: proofText, images }) => {
+    async ({ taskId, text: proofText, format, images }) => {
       const data = await api(`/tasks/${encodeURIComponent(taskId)}/finish`, {
         method: "POST",
-        body: JSON.stringify({ text: proofText, images }),
+        body: JSON.stringify({ text: proofText, textFormat: format, images }),
       });
       if ("error" in data) return errorText(data.error);
       return text(data);

@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   if (!isUser(user)) return user;
 
   const memberships = await prisma.membership.findMany({
-    where: { userId: user.id },
+    where: { userId: user.id, blocked: false },
     include: { team: true },
     orderBy: { createdAt: "asc" },
   });

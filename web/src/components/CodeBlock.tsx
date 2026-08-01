@@ -38,16 +38,23 @@ export function CodeBlock({ code }: { code: string }) {
       style={{
         margin: 0,
         background: "#1e1e1e",
+        color: "#DCDCDC",
         borderRadius: 10,
         padding: "14px 16px",
         overflowX: "auto",
+        overflowY: "auto",
+        maxHeight: 400,
         fontSize: 13.5,
         lineHeight: 1.6,
         fontFamily:
           "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
       }}
     >
-      <code dangerouslySetInnerHTML={{ __html: html }} />
+      <code
+        className="hljs"
+        style={{ padding: 0, background: "transparent", color: "inherit" }}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
     </pre>
   );
 }

@@ -4,31 +4,37 @@ import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { z } from "zod";
 import {
+  createPasswordResetToken,
   createSession,
   destroySession,
   hashPassword,
   requireUser,
+  resetPasswordWithToken,
   verifyPassword,
 } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { parseTextFormat } from "@/lib/code";
 import { CATEGORIES, USER_COLORS, initialFromName } from "@/lib/format";
 import { getTeamPayload, type SubmissionDTO } from "@/lib/team";
 
 function toSubmissionDTO(submission: {
   type: string;
   text: string;
+  textFormat: string;
   files: { id: string; url: string; name: string; kind: string }[];
 }): SubmissionDTO {
   return {
     type: submission.type as SubmissionDTO["type"],
     text: submission.text,
+    textFormat: parseTextFormat(submission.textFormat),
     files: submission.files.map((f) => ({
       id: f.id,
       url: f.url,
       name: f.name,
-      kind: f.kind as "image" | "video",
+      kind: f.kind as "image" | "video" | "spreadsheet",
     })),
   };
 }
@@ -44,12 +50,32 @@ const ALLOWED_VIDEO_TYPES: Record<string, string> = {
   "video/webm": "webm",
   "video/quicktime": "mov",
 };
+const ALLOWED_SPREADSHEET_TYPES: Record<string, string> = {
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+  "application/vnd.ms-excel": "xls",
+  "text/csv": "csv",
+};
+// Windows/some browsers mislabel .xlsx/.xls as a generic binary MIME type,
+// so fall back to the filename extension for spreadsheet uploads.
+const SPREADSHEET_EXTENSIONS: Record<string, string> = {
+  xlsx: "xlsx",
+  xls: "xls",
+  csv: "csv",
+};
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_SPREADSHEET_BYTES = 15 * 1024 * 1024;
 const MAX_IMAGES_PER_SUBMISSION = 5;
 const MAX_VIDEOS_PER_SUBMISSION = 3;
+const MAX_SPREADSHEETS_PER_SUBMISSION = 3;
 
-type SavedFile = { url: string; name: string; kind: "image" | "video" };
+type SavedFile = { url: string; name: string; kind: "image" | "video" | "spreadsheet" };
+
+function isSpreadsheetFile(file: File): boolean {
+  if (ALLOWED_SPREADSHEET_TYPES[file.type]) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return (file.type === "" || file.type === "application/octet-stream") && !!SPREADSHEET_EXTENSIONS[ext];
+}
 
 async function validateAndSaveFiles(
   files: File[],
@@ -63,18 +89,33 @@ async function validateAndSaveFiles(
     const mime = file.type;
     const imageExt = ALLOWED_IMAGE_TYPES[mime];
     const videoExt = ALLOWED_VIDEO_TYPES[mime];
-    if (!imageExt && !videoExt) {
-      return { error: "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV)" };
+    const spreadsheetExt =
+      ALLOWED_SPREADSHEET_TYPES[mime] ??
+      (isSpreadsheetFile(file)
+        ? SPREADSHEET_EXTENSIONS[file.name.split(".").pop()!.toLowerCase()]
+        : undefined);
+    if (!imageExt && !videoExt && !spreadsheetExt) {
+      return {
+        error:
+          "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV / XLSX / XLS / CSV)",
+      };
     }
-    const kind: "image" | "video" = imageExt ? "image" : "video";
-    const ext = imageExt ?? videoExt!;
-    const maxBytes = kind === "video" ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+    const kind: "image" | "video" | "spreadsheet" = imageExt
+      ? "image"
+      : videoExt
+        ? "video"
+        : "spreadsheet";
+    const ext = imageExt ?? videoExt ?? spreadsheetExt!;
+    const maxBytes =
+      kind === "video" ? MAX_VIDEO_BYTES : kind === "spreadsheet" ? MAX_SPREADSHEET_BYTES : MAX_IMAGE_BYTES;
     if (file.size > maxBytes) {
       return {
         error:
           kind === "video"
             ? "حجم الفيديو أكبر من 50 ميغابايت"
-            : "حجم الصورة أكبر من 15 ميغابايت",
+            : kind === "spreadsheet"
+              ? "حجم ملف الإكسل أكبر من 15 ميغابايت"
+              : "حجم الصورة أكبر من 15 ميغابايت",
       };
     }
 
@@ -157,6 +198,50 @@ export async function logoutAction() {
   redirect("/login");
 }
 
+const forgotPasswordSchema = z.object({ email: z.string().email() });
+
+export async function requestPasswordResetAction(formData: FormData) {
+  const parsed = forgotPasswordSchema.safeParse({
+    email: String(formData.get("email") || "").trim().toLowerCase(),
+  });
+  if (!parsed.success) return { error: "أدخل بريدًا إلكترونيًا صحيحًا" };
+
+  const token = await createPasswordResetToken(parsed.data.email);
+  if (token) {
+    const hdrs = await headers();
+    const host = hdrs.get("host") || "localhost:3000";
+    const proto = hdrs.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+    const base = process.env.APP_URL || `${proto}://${host}`;
+    // No email provider is configured; the reset link is written to the
+    // server log so only whoever runs the server can retrieve it.
+    console.info(`[password-reset] ${parsed.data.email} -> ${base}/reset-password?token=${token}`);
+  }
+
+  // Always return the same message, whether or not the email exists,
+  // so this endpoint can't be used to enumerate registered accounts.
+  return {
+    success: "إذا كان البريد مسجلاً لدينا، تحقق من سجلات الخادم للحصول على رابط إعادة التعيين.",
+  };
+}
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  password: z.string().min(4),
+});
+
+export async function resetPasswordAction(formData: FormData) {
+  const parsed = resetPasswordSchema.safeParse({
+    token: String(formData.get("token") || ""),
+    password: String(formData.get("password") || ""),
+  });
+  if (!parsed.success) return { error: "بيانات غير صحيحة" };
+
+  const ok = await resetPasswordWithToken(parsed.data.token, parsed.data.password);
+  if (!ok) return { error: "الرابط غير صالح أو منتهي الصلاحية" };
+
+  redirect("/login");
+}
+
 export async function createTeamAction(formData: FormData) {
   const user = await requireUser();
   const name = String(formData.get("name") || "").trim();
@@ -182,6 +267,13 @@ export async function joinTeamAction(formData: FormData) {
   const team = await prisma.team.findUnique({ where: { inviteCode: code } });
   if (!team) return { error: "رمز الدعوة غير صالح" };
 
+  const existing = await prisma.membership.findUnique({
+    where: { userId_teamId: { userId: user.id, teamId: team.id } },
+  });
+  if (existing?.blocked) {
+    return { error: "تم حظرك من هذا الفريق" };
+  }
+
   await prisma.membership.upsert({
     where: { userId_teamId: { userId: user.id, teamId: team.id } },
     create: { userId: user.id, teamId: team.id, role: "member" },
@@ -189,6 +281,47 @@ export async function joinTeamAction(formData: FormData) {
   });
 
   redirect(`/t/${team.id}`);
+}
+
+export async function blockMemberAction(teamId: string, memberUserId: string) {
+  const user = await requireUser();
+
+  const owner = await prisma.membership.findUnique({
+    where: { userId_teamId: { userId: user.id, teamId } },
+  });
+  if (!owner || owner.blocked || owner.role !== "owner") {
+    return { error: "غير مصرح لك بإدارة هذا الفريق" };
+  }
+  if (memberUserId === user.id) {
+    return { error: "لا يمكنك حظر نفسك" };
+  }
+
+  await prisma.membership.update({
+    where: { userId_teamId: { userId: memberUserId, teamId } },
+    data: { blocked: true },
+  });
+
+  revalidatePath(`/t/${teamId}/admin`);
+  return { ok: true as const };
+}
+
+export async function unblockMemberAction(teamId: string, memberUserId: string) {
+  const user = await requireUser();
+
+  const owner = await prisma.membership.findUnique({
+    where: { userId_teamId: { userId: user.id, teamId } },
+  });
+  if (!owner || owner.blocked || owner.role !== "owner") {
+    return { error: "غير مصرح لك بإدارة هذا الفريق" };
+  }
+
+  await prisma.membership.update({
+    where: { userId_teamId: { userId: memberUserId, teamId } },
+    data: { blocked: false },
+  });
+
+  revalidatePath(`/t/${teamId}/admin`);
+  return { ok: true as const };
 }
 
 export async function createTaskAction(input: {
@@ -244,6 +377,7 @@ export async function finishTaskAction(formData: FormData) {
   const user = await requireUser();
   const taskId = String(formData.get("taskId") || "").trim();
   const text = String(formData.get("text") || "").trim();
+  const textFormat = parseTextFormat(formData.get("textFormat"));
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
 
   if (!taskId) return { error: "المهمة غير موجودة" };
@@ -263,11 +397,15 @@ export async function finishTaskAction(formData: FormData) {
 
   const imageCount = files.filter((f) => ALLOWED_IMAGE_TYPES[f.type]).length;
   const videoCount = files.filter((f) => ALLOWED_VIDEO_TYPES[f.type]).length;
+  const spreadsheetCount = files.filter((f) => isSpreadsheetFile(f)).length;
   if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
   }
   if (videoCount > MAX_VIDEOS_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_VIDEOS_PER_SUBMISSION} فيديوهات لكل إثبات` };
+  }
+  if (spreadsheetCount > MAX_SPREADSHEETS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_SPREADSHEETS_PER_SUBMISSION} ملفات إكسل لكل إثبات` };
   }
 
   const result = await validateAndSaveFiles(files, taskId);
@@ -283,6 +421,7 @@ export async function finishTaskAction(formData: FormData) {
         taskId,
         type,
         text,
+        textFormat,
         files: { create: saved },
       },
     }),
@@ -312,6 +451,7 @@ export async function editSubmissionAction(formData: FormData) {
   const user = await requireUser();
   const taskId = String(formData.get("taskId") || "").trim();
   const text = String(formData.get("text") || "").trim();
+  const textFormat = parseTextFormat(formData.get("textFormat"));
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   const removeFileIds = String(formData.get("removeFileIds") || "")
     .split(",")
@@ -340,11 +480,17 @@ export async function editSubmissionAction(formData: FormData) {
   const videoCount =
     keptFiles.filter((f) => f.kind === "video").length +
     files.filter((f) => ALLOWED_VIDEO_TYPES[f.type]).length;
+  const spreadsheetCount =
+    keptFiles.filter((f) => f.kind === "spreadsheet").length +
+    files.filter((f) => isSpreadsheetFile(f)).length;
   if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
   }
   if (videoCount > MAX_VIDEOS_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_VIDEOS_PER_SUBMISSION} فيديوهات لكل إثبات` };
+  }
+  if (spreadsheetCount > MAX_SPREADSHEETS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_SPREADSHEETS_PER_SUBMISSION} ملفات إكسل لكل إثبات` };
   }
 
   const result = await validateAndSaveFiles(files, taskId);
@@ -369,7 +515,7 @@ export async function editSubmissionAction(formData: FormData) {
       : []),
     prisma.submission.update({
       where: { taskId },
-      data: { type, text, files: { create: saved } },
+      data: { type, text, textFormat, files: { create: saved } },
     }),
   ]);
 

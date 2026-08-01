@@ -184,11 +184,111 @@ button {
 
   .print-only {
     display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: #fff;
+    color: #2b2118;
   }
 
   body {
-    background: #fff;
+    background: #fff !important;
   }
+
+  /* Avoid clipping long proof text / images across pages */
+  .print-only img {
+    break-inside: avoid;
+    max-width: 100% !important;
+  }
+
+  @page {
+    margin: 16mm;
+  }
+}
+
+.markdown-view > :first-child {
+  margin-top: 0;
+}
+
+.markdown-view > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown-view h1,
+.markdown-view h2,
+.markdown-view h3 {
+  margin: 14px 0 6px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.markdown-view h1 {
+  font-size: 1.3em;
+}
+
+.markdown-view h2 {
+  font-size: 1.15em;
+}
+
+.markdown-view h3 {
+  font-size: 1.05em;
+}
+
+.markdown-view p {
+  margin: 8px 0;
+  line-height: 1.6;
+}
+
+.markdown-view ul,
+.markdown-view ol {
+  margin: 8px 0;
+  padding-inline-start: 22px;
+}
+
+.markdown-view li {
+  margin: 3px 0;
+  line-height: 1.55;
+}
+
+.markdown-view li > input[type="checkbox"] {
+  margin-inline-end: 6px;
+}
+
+.markdown-view blockquote {
+  margin: 10px 0;
+  padding: 4px 14px;
+  border-inline-start: 3px solid var(--border);
+  color: var(--muted);
+}
+
+.markdown-view hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 14px 0;
+}
+
+.markdown-view table {
+  border-collapse: collapse;
+  margin: 10px 0;
+  width: 100%;
+  font-size: 0.92em;
+}
+
+.markdown-view th,
+.markdown-view td {
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  text-align: start;
+}
+
+.markdown-view th {
+  background: #fff3dc;
+}
+
+.markdown-view img {
+  max-width: 100%;
+  border-radius: 10px;
 }
 
 @media (max-width: 900px) {

@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
+import { parseTextFormat } from "@/lib/code";
 import { prisma } from "@/lib/db";
 import { isUser, json, requireBearerUser } from "../../../_util";
 
@@ -25,6 +26,7 @@ export async function POST(
   const { taskId } = await params;
   const body = await req.json().catch(() => null);
   const text = String(body?.text || "").trim();
+  const textFormat = parseTextFormat(body?.textFormat);
   const images: ImageInput[] = Array.isArray(body?.images) ? body.images : [];
 
   const task = await prisma.task.findUnique({
@@ -85,7 +87,7 @@ export async function POST(
 
   await prisma.$transaction([
     prisma.submission.create({
-      data: { taskId, type, text, files: { create: saved } },
+      data: { taskId, type, text, textFormat, files: { create: saved } },
     }),
     prisma.task.update({
       where: { id: taskId },

@@ -352,6 +352,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
       }}
     >
       <PlaygroundNav
+        teamId={data.team.id}
         teamName={data.team.name}
         myPoints={myPoints}
         me={me}

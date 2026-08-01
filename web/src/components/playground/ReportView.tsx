@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Avatar } from "@/components/Avatar";
+import { linkifyText } from "@/components/Linkify";
 import { fmtDur, starsStr, weekKey, weekLabel } from "@/lib/format";
 import type { TaskDTO, TeamMember } from "@/lib/team";
+import { buildWeeklyReportDocx } from "@/lib/weeklyDocx";
 
 type Props = {
   teamName: string;
@@ -93,14 +95,56 @@ export function ReportView({ teamName, tasks, members }: Props) {
   const [composeId, setComposeId] = useState<string | null>(null);
   const [bossEmail, setBossEmail] = useState<Record<string, string>>({});
   const [printOnlyId, setPrintOnlyId] = useState<string | null>(null);
+  const [printPending, setPrintPending] = useState(false);
+  const [docxBusyId, setDocxBusyId] = useState<string | null>(null);
 
   useEffect(() => {
     function reset() {
       setPrintOnlyId(null);
+      setPrintPending(false);
     }
     window.addEventListener("afterprint", reset);
     return () => window.removeEventListener("afterprint", reset);
   }, []);
+
+  // Wait until the print-only sheet is committed (and proof images have
+  // settled) before opening the dialog — a lone rAF races React's render.
+  useEffect(() => {
+    if (!printPending || !printOnlyId) return;
+    let cancelled = false;
+
+    async function runPrint() {
+      const root = document.querySelector(".print-only");
+      if (root) {
+        const imgs = Array.from(root.querySelectorAll("img"));
+        await Promise.race([
+          Promise.all(
+            imgs.map(
+              (img) =>
+                img.complete
+                  ? Promise.resolve()
+                  : new Promise<void>((resolve) => {
+                      img.addEventListener("load", () => resolve(), { once: true });
+                      img.addEventListener("error", () => resolve(), { once: true });
+                    }),
+            ),
+          ),
+          new Promise<void>((resolve) => setTimeout(resolve, 2000)),
+        ]);
+      }
+      if (cancelled) return;
+      setPrintPending(false);
+      window.print();
+    }
+
+    const id = requestAnimationFrame(() => {
+      void runPrint();
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(id);
+    };
+  }, [printPending, printOnlyId]);
 
   const weekTasks = useMemo(
     () => tasks.filter((t) => weekKeyForTask(t) === selectedKey),
@@ -186,7 +230,23 @@ export function ReportView({ teamName, tasks, members }: Props) {
 
   function printMemberPdf(m: MemberWeekStat) {
     setPrintOnlyId(m.id);
-    requestAnimationFrame(() => window.print());
+    setPrintPending(true);
+  }
+
+  async function downloadMemberDocx(m: MemberWeekStat) {
+    if (docxBusyId) return;
+    setDocxBusyId(m.id);
+    try {
+      const blob = await buildWeeklyReportDocx(m, teamName, weekLabel(selectedKey));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `تقرير-${m.name}-${selectedKey}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setDocxBusyId(null);
+    }
   }
 
   function mailtoHref(m: MemberWeekStat) {
@@ -477,6 +537,26 @@ export function ReportView({ teamName, tasks, members }: Props) {
                     >
                       🖨 PDF
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadMemberDocx(m)}
+                      disabled={docxBusyId === m.id}
+                      className="btn-anim"
+                      style={{
+                        background: "#FFF",
+                        color: "#7A6A55",
+                        border: "2px solid #FFE3B3",
+                        borderRadius: 999,
+                        padding: "7px 14px",
+                        fontWeight: 800,
+                        fontSize: 13,
+                        cursor: docxBusyId === m.id ? "wait" : "pointer",
+                        fontFamily: "inherit",
+                        opacity: docxBusyId === m.id ? 0.7 : 1,
+                      }}
+                    >
+                      {docxBusyId === m.id ? "… جاري التجهيز" : "📄 Word"}
+                    </button>
                   </div>
                 </div>
               ) : null}
@@ -525,9 +605,15 @@ export function ReportView({ teamName, tasks, members }: Props) {
                   ? new Date(t.completedAt).toLocaleDateString("ar", { day: "numeric", month: "long" })
                   : "—"}
               </div>
-              {t.desc ? <div style={{ marginTop: 6 }}>الوصف: {t.desc}</div> : null}
+              {t.desc ? (
+                <div style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>
+                  الوصف: {linkifyText(t.desc)}
+                </div>
+              ) : null}
               {t.submission?.text ? (
-                <div style={{ marginTop: 6 }}>الإنجاز: {t.submission.text}</div>
+                <div style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>
+                  الإنجاز: {linkifyText(t.submission.text)}
+                </div>
               ) : null}
               {t.submission?.files.length ? (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
@@ -557,7 +643,7 @@ export function ReportView({ teamName, tasks, members }: Props) {
                           padding: "6px 10px",
                         }}
                       >
-                        🎥 {f.name}
+                        {f.kind === "spreadsheet" ? "📊" : "🎥"} {f.name}
                       </div>
                     ),
                   )}

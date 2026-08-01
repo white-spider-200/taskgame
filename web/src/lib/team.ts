@@ -1,3 +1,4 @@
+import type { SubmissionTextFormat } from "./code";
 import { prisma } from "./db";
 
 export type TeamMember = {
@@ -13,12 +14,13 @@ export type SubmissionFileDTO = {
   id: string;
   url: string;
   name: string;
-  kind: "image" | "video";
+  kind: "image" | "video" | "spreadsheet";
 };
 
 export type SubmissionDTO = {
   type: "text" | "image" | "video" | "both" | "media";
   text: string;
+  textFormat: SubmissionTextFormat;
   files: SubmissionFileDTO[];
 };
 
@@ -40,7 +42,7 @@ export type TaskDTO = {
 
 export type TeamPayload = {
   team: { id: string; name: string; inviteCode: string };
-  me: TeamMember & { email: string };
+  me: TeamMember & { email: string; isOwner: boolean };
   members: TeamMember[];
   tasks: TaskDTO[];
 };
@@ -91,10 +93,10 @@ export async function getTeamPayload(
         orderBy: { createdAt: "asc" },
       });
 
-  if (!membership) return null;
+  if (!membership || membership.blocked) return null;
 
   const members = await prisma.membership.findMany({
-    where: { teamId: membership.teamId },
+    where: { teamId: membership.teamId, blocked: false },
     include: { user: true },
     orderBy: { createdAt: "asc" },
   });
@@ -137,11 +139,12 @@ export async function getTeamPayload(
       ? {
           type: t.submission.type as SubmissionDTO["type"],
           text: t.submission.text,
+          textFormat: t.submission.textFormat as SubmissionTextFormat,
           files: t.submission.files.map((f) => ({
             id: f.id,
             url: f.url,
             name: f.name,
-            kind: f.kind as "image" | "video",
+            kind: f.kind as "image" | "video" | "spreadsheet",
           })),
         }
       : null,
@@ -161,6 +164,7 @@ export async function getTeamPayload(
       color: membership.user.color,
       avatarUrl: membership.user.avatarUrl,
       basePoints: membership.basePoints,
+      isOwner: membership.role === "owner",
     },
     members: memberDTOs,
     tasks: taskDTOs,

@@ -4,6 +4,7 @@ export function Toast({ message }: Props) {
   if (!message) return null;
   return (
     <div
+      className="no-print"
       style={{
         position: "fixed",
         top: 76,

@@ -10,9 +10,12 @@ import {
   rateTaskAction,
 } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
-import { CodeBlock } from "@/components/CodeBlock";
+import { ExcelPreview } from "@/components/ExcelPreview";
 import { FileDropZone } from "@/components/FileDropZone";
-import { looksLikeCode } from "@/lib/code";
+import { linkifyText } from "@/components/Linkify";
+import { SubmissionText } from "@/components/SubmissionText";
+import { TextFormatPicker } from "@/components/TextFormatPicker";
+import type { SubmissionTextFormat } from "@/lib/code";
 import {
   CATEGORY_ICONS,
   RATING_LABELS,
@@ -25,7 +28,7 @@ import type { TeamPayload } from "@/lib/team";
 import { Toast } from "./playground/Toast";
 
 const FILE_ACCEPT =
-  "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime";
+  "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,.xlsx,.xls,.csv";
 
 export function TaskDetail({
   teamId,
@@ -41,9 +44,11 @@ export function TaskDetail({
   const [toast, setToast] = useState("");
   const [tick, setTick] = useState(0);
   const [proofText, setProofText] = useState("");
+  const [proofFormat, setProofFormat] = useState<SubmissionTextFormat>("auto");
   const [proofFiles, setProofFiles] = useState<File[]>([]);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
+  const [editFormat, setEditFormat] = useState<SubmissionTextFormat>("auto");
   const [editFiles, setEditFiles] = useState<File[]>([]);
   const [lightbox, setLightbox] = useState<{ url: string; kind: "image" | "video" } | null>(
     null,
@@ -119,6 +124,7 @@ export function TaskDetail({
     const fd = new FormData();
     fd.set("taskId", taskId);
     fd.set("text", text);
+    fd.set("textFormat", proofFormat);
     for (const f of proofFiles) fd.append("files", f);
 
     startTransition(async () => {
@@ -163,6 +169,7 @@ export function TaskDetail({
 
   function openEditForm() {
     setEditText(task?.submission?.text ?? "");
+    setEditFormat(task?.submission?.textFormat ?? "auto");
     setEditFiles([]);
     setRemoveFileIds([]);
     setEditing(true);
@@ -180,6 +187,7 @@ export function TaskDetail({
     const fd = new FormData();
     fd.set("taskId", taskId);
     fd.set("text", text);
+    fd.set("textFormat", editFormat);
     for (const f of editFiles) fd.append("files", f);
     if (removeFileIds.length) fd.set("removeFileIds", removeFileIds.join(","));
 
@@ -273,7 +281,7 @@ export function TaskDetail({
             gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <Avatar
               url={owner?.avatarUrl}
               initial={owner?.initial || "؟"}
@@ -281,8 +289,17 @@ export function TaskDetail({
               size={48}
               style={{ fontSize: 18 }}
             />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div dir="auto" style={{ fontWeight: 800, fontSize: 21, color: "#2B2118" }}>
+            <div style={{ flex: 1, minWidth: 180 }}>
+              <div
+                dir="auto"
+                style={{
+                  fontWeight: 800,
+                  fontSize: 21,
+                  color: "#2B2118",
+                  wordBreak: "break-word",
+                  overflowWrap: "anywhere",
+                }}
+              >
                 {task.title}
               </div>
               <div style={{ fontSize: 13.5, color: "#9A8A73", fontWeight: 600 }}>
@@ -366,8 +383,21 @@ export function TaskDetail({
           </div>
 
           {task.desc ? (
-            <div style={{ fontSize: 15, color: "#7A6A55", fontWeight: 500 }}>
-              {task.desc}
+            <div
+              style={{
+                fontSize: 15,
+                color: "#7A6A55",
+                fontWeight: 500,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+                maxHeight: 260,
+                overflowY: "auto",
+                overflowX: "auto",
+                paddingInlineEnd: 4,
+              }}
+            >
+              {linkifyText(task.desc)}
             </div>
           ) : null}
 
@@ -412,6 +442,7 @@ export function TaskDetail({
                   background: "#FFF",
                 }}
               />
+              <TextFormatPicker value={proofFormat} onChange={setProofFormat} accent="#1FB6A6" />
               <FileDropZone
                 files={proofFiles}
                 onFilesChange={setProofFiles}
@@ -487,23 +518,32 @@ export function TaskDetail({
               {!editing ? (
                 <>
                   {task.submission.text ? (
-                    looksLikeCode(task.submission.text) ? (
-                      <CodeBlock code={task.submission.text} />
-                    ) : (
-                      <div
-                        dir="auto"
-                        style={{
-                          fontSize: 15,
-                          color: "#2B2118",
-                          fontWeight: 500,
-                          whiteSpace: "pre-wrap",
-                        }}
-                      >
-                        {task.submission.text}
-                      </div>
-                    )
+                    <div
+                      style={{
+                        maxHeight: 400,
+                        overflowY: "auto",
+                        overflowX: "auto",
+                        wordBreak: "break-word",
+                        overflowWrap: "anywhere",
+                        paddingInlineEnd: 4,
+                      }}
+                    >
+                      <SubmissionText
+                        text={task.submission.text}
+                        format={task.submission.textFormat}
+                      />
+                    </div>
                   ) : null}
-                  {task.submission.files.length ? (
+                  {task.submission.files.some((f) => f.kind === "spreadsheet") ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {task.submission.files
+                        .filter((f) => f.kind === "spreadsheet")
+                        .map((f) => (
+                          <ExcelPreview key={f.id} url={f.url} name={f.name} />
+                        ))}
+                    </div>
+                  ) : null}
+                  {task.submission.files.some((f) => f.kind !== "spreadsheet") ? (
                     <div
                       style={{
                         display: "grid",
@@ -511,7 +551,9 @@ export function TaskDetail({
                         gap: 10,
                       }}
                     >
-                      {task.submission.files.map((f, i) =>
+                      {task.submission.files
+                        .filter((f) => f.kind !== "spreadsheet")
+                        .map((f, i) =>
                         f.kind === "video" ? (
                           <div
                             key={f.id}
@@ -597,6 +639,7 @@ export function TaskDetail({
                       background: "#FFF",
                     }}
                   />
+                  <TextFormatPicker value={editFormat} onChange={setEditFormat} accent="#F2C94C" />
                   <FileDropZone
                     files={editFiles}
                     onFilesChange={setEditFiles}

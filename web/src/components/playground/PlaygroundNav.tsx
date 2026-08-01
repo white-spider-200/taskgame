@@ -1,17 +1,20 @@
+import Link from "next/link";
 import { logoutAction } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
 import { Logo } from "@/components/Logo";
 import type { View } from "./types";
 
 type Props = {
+  teamId: string;
   teamName: string;
   myPoints: number;
-  me: { initial: string; color: string; avatarUrl?: string | null };
+  me: { initial: string; color: string; avatarUrl?: string | null; isOwner: boolean };
   view: View;
   onViewChange: (view: View) => void;
 };
 
 export function PlaygroundNav({
+  teamId,
   teamName,
   myPoints,
   me,
@@ -115,6 +118,24 @@ export function PlaygroundNav({
           >
             ⭐ {myPoints} نقطة
           </div>
+          {me.isOwner ? (
+            <Link
+              href={`/t/${teamId}/admin/users`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                border: "2px solid #FFE3B3",
+                borderRadius: 999,
+                padding: "5px 14px",
+                color: "#2B2118",
+                fontWeight: 700,
+                fontSize: 13,
+                textDecoration: "none",
+              }}
+            >
+              ⚙️ إدارة الفريق
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={() => onViewChange("profile")}

@@ -1,6 +1,7 @@
 import { unlink, mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { revalidatePath } from "next/cache";
+import { parseTextFormat } from "@/lib/code";
 import { prisma } from "@/lib/db";
 import { isUser, json, requireBearerUser } from "../../../_util";
 
@@ -25,6 +26,7 @@ export async function PATCH(
   const { taskId } = await params;
   const body = await req.json().catch(() => null);
   const text = body?.text !== undefined ? String(body.text).trim() : undefined;
+  const textFormat = body?.textFormat !== undefined ? parseTextFormat(body.textFormat) : undefined;
   const images: ImageInput[] = Array.isArray(body?.images) ? body.images : [];
   const removeFileIds: string[] = Array.isArray(body?.removeFileIds) ? body.removeFileIds : [];
 
@@ -98,7 +100,12 @@ export async function PATCH(
       : []),
     prisma.submission.update({
       where: { taskId },
-      data: { type, text: finalText, files: { create: saved } },
+      data: {
+        type,
+        text: finalText,
+        ...(textFormat !== undefined ? { textFormat } : {}),
+        files: { create: saved },
+      },
     }),
   ]);
 
@@ -113,6 +120,7 @@ export async function PATCH(
     submission: {
       type: submission.type,
       text: submission.text,
+      textFormat: submission.textFormat,
       files: submission.files.map((f) => ({ id: f.id, url: f.url, name: f.name, kind: f.kind })),
     },
   });
