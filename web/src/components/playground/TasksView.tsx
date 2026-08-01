@@ -71,7 +71,7 @@ export function TasksView({
           }}
           className="playground-tasks-grid"
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }}>
             <div
               style={{
                 display: "flex",
@@ -162,6 +162,7 @@ export function TasksView({
                     display: "flex",
                     flexDirection: "column",
                     gap: 12,
+                    minWidth: 0,
                     position: "relative",
                     animation: "pop .25s ease",
                   }}
