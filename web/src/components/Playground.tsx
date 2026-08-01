@@ -242,7 +242,11 @@ export function Playground({ initial }: { initial: TeamPayload }) {
         t.ownerId !== me.id &&
         t.myRating == null
       );
-    return t.status === "done" && isToday(t);
+    return (
+      t.status === "done" &&
+      isToday(t) &&
+      (t.ownerId === me.id || t.myRating != null)
+    );
   });
 
   void tick;
