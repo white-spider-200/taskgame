@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Avatar } from "@/components/Avatar";
 import { ExcelPreview } from "@/components/ExcelPreview";
+import { PdfPreview } from "@/components/PdfPreview";
 import { linkifyText } from "@/components/Linkify";
 import { SubmissionText } from "@/components/SubmissionText";
 import {
@@ -23,12 +24,15 @@ type Props = {
   filter: Filter;
   onFilterChange: (f: Filter) => void;
   onOpenModal: () => void;
+  onOpenRecurring: () => void;
+  recurringCount: number;
   miniLeaders: MiniLeader[];
   taskMeta: (t: TaskDTO) => string;
   ratings: Record<string, number>;
   onSetRating: (taskId: string, stars: number) => void;
   onRate: (id: string) => void;
   onDelete: (id: string) => void;
+  onRepeat: (id: string) => void;
 };
 
 export function TasksView({
@@ -43,12 +47,15 @@ export function TasksView({
   filter,
   onFilterChange,
   onOpenModal,
+  onOpenRecurring,
+  recurringCount,
   miniLeaders,
   taskMeta,
   ratings,
   onSetRating,
   onRate,
   onDelete,
+  onRepeat,
 }: Props) {
   function filterStyle(f: Filter) {
     const on = filter === f;
@@ -125,9 +132,26 @@ export function TasksView({
               </div>
               <button
                 type="button"
-                onClick={onOpenModal}
+                onClick={onOpenRecurring}
                 style={{
                   marginInlineStart: "auto",
+                  background: "#FFF",
+                  color: "#5B3FA8",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  padding: "8px 16px",
+                  borderRadius: 999,
+                  border: "2px solid #C9B8F5",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                }}
+              >
+                🔁 متكررة{recurringCount ? ` (${recurringCount})` : ""}
+              </button>
+              <button
+                type="button"
+                onClick={onOpenModal}
+                style={{
                   background: "#FF6B57",
                   color: "#FFF",
                   fontWeight: 700,
@@ -222,6 +246,11 @@ export function TasksView({
                           overflowWrap: "anywhere",
                         }}
                       >
+                        {t.recurringId ? (
+                          <span title="مهمة متكررة" style={{ marginInlineEnd: 6 }}>
+                            🔁
+                          </span>
+                        ) : null}
                         {t.title}
                       </div>
                       <div
@@ -337,6 +366,27 @@ export function TasksView({
                       </>
                     ) : null}
 
+                    {t.status === "done" && isMine ? (
+                      <button
+                        type="button"
+                        onClick={() => onRepeat(t.id)}
+                        title="ابدأ نفس المهمة من جديد"
+                        style={{
+                          background: "#FFF",
+                          color: "#5B3FA8",
+                          fontWeight: 700,
+                          fontSize: 13,
+                          padding: "7px 14px",
+                          borderRadius: 999,
+                          border: "2px solid #C9B8F5",
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                        }}
+                      >
+                        إعادة 🔁
+                      </button>
+                    ) : null}
+
                     {t.status === "review" && isMine ? (
                       <div
                         style={{
@@ -449,7 +499,16 @@ export function TasksView({
                             ))}
                         </div>
                       ) : null}
-                      {t.submission.files.some((f) => f.kind !== "spreadsheet") ? (
+                      {t.submission.files.some((f) => f.kind === "doc") ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                          {t.submission.files
+                            .filter((f) => f.kind === "doc")
+                            .map((f) => (
+                              <PdfPreview key={f.id} url={f.url} name={f.name} />
+                            ))}
+                        </div>
+                      ) : null}
+                      {t.submission.files.some((f) => f.kind === "image" || f.kind === "video") ? (
                         <div
                           style={{
                             display: "grid",
@@ -458,7 +517,7 @@ export function TasksView({
                           }}
                         >
                           {t.submission.files
-                            .filter((f) => f.kind !== "spreadsheet")
+                            .filter((f) => f.kind === "image" || f.kind === "video")
                             .map((f) =>
                             f.kind === "video" ? (
                               <video

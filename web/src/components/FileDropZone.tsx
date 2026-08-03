@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export const MAX_IMAGES_PER_SUBMISSION = 5;
 export const MAX_VIDEOS_PER_SUBMISSION = 3;
 export const MAX_SPREADSHEETS_PER_SUBMISSION = 3;
+export const MAX_DOCS_PER_SUBMISSION = 3;
 
 const SPREADSHEET_MIME_TYPES = [
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -17,6 +18,12 @@ function isSpreadsheetFile(file: File): boolean {
   if (SPREADSHEET_MIME_TYPES.includes(file.type)) return true;
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   return (file.type === "" || file.type === "application/octet-stream") && SPREADSHEET_EXTENSIONS.includes(ext);
+}
+
+function isDocFile(file: File): boolean {
+  if (file.type === "application/pdf") return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return (file.type === "" || file.type === "application/octet-stream") && ext === "pdf";
 }
 
 const COMPRESS_ABOVE_BYTES = 2 * 1024 * 1024;
@@ -57,7 +64,7 @@ export type ExistingFile = {
   id: string;
   url: string;
   name: string;
-  kind: "image" | "video" | "spreadsheet";
+  kind: "image" | "video" | "spreadsheet" | "doc";
 };
 
 export function FileDropZone({
@@ -81,7 +88,7 @@ export function FileDropZone({
 }) {
   const [dragging, setDragging] = useState(false);
   const [previews, setPreviews] = useState<
-    { url: string; isVideo: boolean; isSpreadsheet: boolean }[]
+    { url: string; isVideo: boolean; isSpreadsheet: boolean; isDoc: boolean }[]
   >([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +97,7 @@ export function FileDropZone({
       url: URL.createObjectURL(f),
       isVideo: f.type.startsWith("video/"),
       isSpreadsheet: isSpreadsheetFile(f),
+      isDoc: isDocFile(f),
     }));
     setPreviews(urls);
     return () => urls.forEach((u) => URL.revokeObjectURL(u.url));
@@ -104,6 +112,9 @@ export function FileDropZone({
   const spreadsheetCount =
     existingFiles.filter((f) => f.kind === "spreadsheet").length +
     files.filter((f) => isSpreadsheetFile(f)).length;
+  const docCount =
+    existingFiles.filter((f) => f.kind === "doc").length +
+    files.filter((f) => isDocFile(f)).length;
 
   async function addFiles(newFiles: FileList | File[] | null) {
     if (!newFiles) return;
@@ -112,10 +123,16 @@ export function FileDropZone({
     let imgCount = imageCount;
     let vidCount = videoCount;
     let sheetCount = spreadsheetCount;
+    let pdfCount = docCount;
     for (const f of incoming) {
       const isVideo = f.type.startsWith("video/");
       const isSheet = isSpreadsheetFile(f);
-      if (isSheet) {
+      const isDoc = isDocFile(f);
+      if (isDoc) {
+        if (pdfCount >= MAX_DOCS_PER_SUBMISSION) continue;
+        pdfCount++;
+        merged.push(f);
+      } else if (isSheet) {
         if (sheetCount >= MAX_SPREADSHEETS_PER_SUBMISSION) continue;
         sheetCount++;
         merged.push(f);
@@ -156,13 +173,15 @@ export function FileDropZone({
   const atLimit =
     imageCount >= MAX_IMAGES_PER_SUBMISSION &&
     videoCount >= MAX_VIDEOS_PER_SUBMISSION &&
-    spreadsheetCount >= MAX_SPREADSHEETS_PER_SUBMISSION;
+    spreadsheetCount >= MAX_SPREADSHEETS_PER_SUBMISSION &&
+    docCount >= MAX_DOCS_PER_SUBMISSION;
   const thumbs = [
     ...existingFiles.map((f) => ({
       key: f.id,
       url: f.url,
       isVideo: f.kind === "video",
       isSpreadsheet: f.kind === "spreadsheet",
+      isDoc: f.kind === "doc",
       name: f.name,
       onRemove: onRemoveExisting ? () => onRemoveExisting(f.id) : undefined,
     })),
@@ -171,6 +190,7 @@ export function FileDropZone({
       url: p.url,
       isVideo: p.isVideo,
       isSpreadsheet: p.isSpreadsheet,
+      isDoc: p.isDoc,
       name: files[i]?.name ?? "",
       onRemove: () => removeAt(i),
     })),
@@ -236,11 +256,13 @@ export function FileDropZone({
         >
           اسحب أو اضغط أو الصق (Ctrl+V) — حتى {MAX_IMAGES_PER_SUBMISSION} صور و
           {" "}
-          {MAX_VIDEOS_PER_SUBMISSION} فيديوهات و {MAX_SPREADSHEETS_PER_SUBMISSION} ملفات إكسل
+          {MAX_VIDEOS_PER_SUBMISSION} فيديوهات و {MAX_SPREADSHEETS_PER_SUBMISSION} ملفات إكسل و{" "}
+          {MAX_DOCS_PER_SUBMISSION} ملفات PDF
         </div>
         <div style={{ fontSize: 11.5, color: "#B8A98F", fontWeight: 600, marginTop: 2 }}>
           {imageCount}/{MAX_IMAGES_PER_SUBMISSION} صور · {videoCount}/{MAX_VIDEOS_PER_SUBMISSION} فيديو ·{" "}
-          {spreadsheetCount}/{MAX_SPREADSHEETS_PER_SUBMISSION} إكسل
+          {spreadsheetCount}/{MAX_SPREADSHEETS_PER_SUBMISSION} إكسل · {docCount}/
+          {MAX_DOCS_PER_SUBMISSION} PDF
         </div>
       </div>
 
@@ -267,7 +289,35 @@ export function FileDropZone({
                 animationDelay: `${i * 0.04}s`,
               }}
             >
-              {t.isSpreadsheet ? (
+              {t.isDoc ? (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    padding: 6,
+                    background: "#FDF2F2",
+                  }}
+                >
+                  <span style={{ fontSize: 26 }}>📄</span>
+                  <span
+                    style={{
+                      fontSize: 10,
+                      color: "#B4342F",
+                      fontWeight: 600,
+                      textAlign: "center",
+                      wordBreak: "break-all",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {t.name}
+                  </span>
+                </div>
+              ) : t.isSpreadsheet ? (
                 <div
                   style={{
                     width: "100%",

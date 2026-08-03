@@ -11,6 +11,10 @@ const MIME_TYPES: Record<string, string> = {
   mp4: "video/mp4",
   webm: "video/webm",
   mov: "video/quicktime",
+  pdf: "application/pdf",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xls: "application/vnd.ms-excel",
+  csv: "text/csv",
 };
 
 export async function GET(

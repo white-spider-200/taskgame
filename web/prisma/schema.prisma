@@ -21,6 +21,7 @@ model User {
   ownedTasks   Task[]       @relation("TaskOwner")
   ratingsGiven Rating[]     @relation("RatingsGiven")
   resetTokens  PasswordResetToken[]
+  recurringTasks RecurringTask[] @relation("RecurringOwner")
 
   @@index([email])
 }
@@ -45,6 +46,7 @@ model Team {
   updatedAt   DateTime     @updatedAt
   memberships Membership[]
   tasks       Task[]
+  recurringTasks RecurringTask[]
 }
 
 model Membership {
@@ -75,14 +77,43 @@ model Task {
   completedAt DateTime?
   teamId     String
   ownerId    String
+  recurringId String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   team       Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   owner      User         @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recurring  RecurringTask? @relation(fields: [recurringId], references: [id], onDelete: SetNull)
   ratings    Rating[]
   submission Submission?
 
   @@index([teamId, status])
+  @@index([ownerId])
+  @@index([recurringId])
+}
+
+// A rule that auto-creates a Task on a schedule. Instances are materialized
+// lazily (see lib/recurring.ts) — no external cron needed.
+model RecurringTask {
+  id        String    @id @default(cuid())
+  title     String
+  desc      String    @default("")
+  category  String
+  freq      String    @default("daily") // daily | weekly | monthly
+  weekdays  String    @default("")      // CSV of 0-6 (Sun-Sat), weekly only
+  monthDay  Int       @default(1)       // 1-31, monthly only (clamped per month)
+  hour      Int       @default(9)       // server-local time of day
+  minute    Int       @default(0)
+  active    Boolean   @default(true)
+  lastRunAt DateTime?                   // last occurrence already materialized
+  teamId    String
+  ownerId   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  owner     User      @relation("RecurringOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@index([teamId, active])
   @@index([ownerId])
 }
 

@@ -35,6 +35,26 @@ export const CATEGORY_ICONS: Record<string, string> = {
   إداري: "📝",
 };
 
+// Recurring-task vocabulary. Lives here (not lib/recurring.ts) because that
+// module pulls in Prisma and can't be imported from client components.
+export type RecurringFreq = "daily" | "weekly" | "monthly";
+
+export const FREQ_LABELS: Record<RecurringFreq, string> = {
+  daily: "يوميًا",
+  weekly: "أسبوعيًا",
+  monthly: "شهريًا",
+};
+
+export const WEEKDAY_LABELS = [
+  "الأحد",
+  "الاثنين",
+  "الثلاثاء",
+  "الأربعاء",
+  "الخميس",
+  "الجمعة",
+  "السبت",
+];
+
 export const USER_COLORS = [
   "#1FB6A6",
   "#FF9F43",

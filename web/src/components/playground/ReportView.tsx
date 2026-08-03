@@ -643,7 +643,7 @@ export function ReportView({ teamName, tasks, members }: Props) {
                           padding: "6px 10px",
                         }}
                       >
-                        {f.kind === "spreadsheet" ? "📊" : "🎥"} {f.name}
+                        {f.kind === "spreadsheet" ? "📊" : f.kind === "doc" ? "📄" : "🎥"} {f.name}
                       </div>
                     ),
                   )}

@@ -2,7 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { createTaskAction, deleteTaskAction, rateTaskAction } from "@/app/actions";
+import {
+  createRecurringTaskAction,
+  createTaskAction,
+  deleteRecurringTaskAction,
+  deleteTaskAction,
+  rateTaskAction,
+  repeatTaskAction,
+  runRecurringTaskNowAction,
+  toggleRecurringTaskAction,
+  updateRecurringTaskAction,
+} from "@/app/actions";
 import { dateKey, fmtDur, monthKey, monthLabel } from "@/lib/format";
 import { playNotificationSound, playToastSound, type ToastSoundType } from "@/lib/sound";
 import { pointsForMember, type TeamPayload, type TaskDTO } from "@/lib/team";
@@ -12,6 +22,7 @@ import { HistoryView } from "./playground/HistoryView";
 import { LeadersView } from "./playground/LeadersView";
 import { PlaygroundNav } from "./playground/PlaygroundNav";
 import { ProfileView } from "./playground/ProfileView";
+import { RecurringModal, type Draft } from "./playground/RecurringModal";
 import { ReportView } from "./playground/ReportView";
 import { TasksView } from "./playground/TasksView";
 import { Toast } from "./playground/Toast";
@@ -24,6 +35,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const [viewMemberId, setViewMemberId] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("run");
   const [modalOpen, setModalOpen] = useState(false);
+  const [recurringOpen, setRecurringOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [tick, setTick] = useState(0);
   const [ratings, setRatings] = useState<Record<string, number>>({});
@@ -31,7 +43,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
   const [formDesc, setFormDesc] = useState("");
   const [formCat, setFormCat] = useState<string>("تصميم");
   const [titleError, setTitleError] = useState(false);
-  const [, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   useEffect(() => {
     const myId = data.me.id;
@@ -341,6 +353,70 @@ export function Playground({ initial }: { initial: TeamPayload }) {
     });
   }
 
+  function onRepeat(id: string) {
+    startTransition(async () => {
+      const res = await repeatTaskAction(id);
+      if (res?.error) {
+        showToast(res.error, "error");
+        return;
+      }
+      setFilter("run");
+      showToast("🔁 بدأت المهمة من جديد — بالتوفيق!", "created");
+      router.refresh();
+    });
+  }
+
+  // Every recurring mutation follows the same shape: run it, surface the error
+  // or a success toast, then let the server re-send the rule list.
+  function runRecurring(fn: () => Promise<{ error?: string } | undefined>, okMsg: string) {
+    startTransition(async () => {
+      const res = await fn();
+      if (res?.error) {
+        showToast(res.error, "error");
+        return;
+      }
+      showToast(okMsg, "created");
+      router.refresh();
+    });
+  }
+
+  function onCreateRecurring(draft: Draft) {
+    runRecurring(
+      () => createRecurringTaskAction({ teamId: data.team.id, ...draft }),
+      "🔁 تم حفظ المهمة المتكررة",
+    );
+  }
+
+  function onUpdateRecurring(id: string, draft: Draft) {
+    runRecurring(() => updateRecurringTaskAction(id, draft), "💾 تم تحديث المهمة المتكررة");
+  }
+
+  function onToggleRecurring(id: string, active: boolean) {
+    runRecurring(
+      () => toggleRecurringTaskAction(id, active),
+      active ? "▶ تم استئناف التكرار" : "⏸ تم إيقاف التكرار مؤقتًا",
+    );
+  }
+
+  function onDeleteRecurring(id: string) {
+    if (!window.confirm("حذف هذه المهمة المتكررة؟ لن تُنشأ تلقائيًا بعد الآن.")) return;
+    runRecurring(() => deleteRecurringTaskAction(id), "🗑 تم حذف المهمة المتكررة");
+  }
+
+  function onRunRecurringNow(id: string) {
+    startTransition(async () => {
+      const res = await runRecurringTaskNowAction(id);
+      if (res?.error) {
+        showToast(res.error, "error");
+        return;
+      }
+      setRecurringOpen(false);
+      setFilter("run");
+      showToast("▶ بدأ المؤقّت — بالتوفيق!", "created");
+      router.refresh();
+    });
+  }
+
   const p1 = sorted[0];
   const p2 = sorted[1];
   const p3 = sorted[2];
@@ -379,6 +455,8 @@ export function Playground({ initial }: { initial: TeamPayload }) {
           filter={filter}
           onFilterChange={setFilter}
           onOpenModal={() => setModalOpen(true)}
+          onOpenRecurring={() => setRecurringOpen(true)}
+          recurringCount={data.recurring.filter((r) => r.active).length}
           miniLeaders={miniLeaders}
           taskMeta={taskMeta}
           ratings={ratings}
@@ -387,6 +465,7 @@ export function Playground({ initial }: { initial: TeamPayload }) {
           }
           onRate={onRate}
           onDelete={onDelete}
+          onRepeat={onRepeat}
         />
       ) : null}
 
@@ -459,6 +538,19 @@ export function Playground({ initial }: { initial: TeamPayload }) {
             setTitleError(false);
           }}
           onCreate={onCreate}
+        />
+      ) : null}
+
+      {recurringOpen ? (
+        <RecurringModal
+          rules={data.recurring}
+          busy={pending}
+          onClose={() => setRecurringOpen(false)}
+          onCreate={onCreateRecurring}
+          onUpdate={onUpdateRecurring}
+          onToggle={onToggleRecurring}
+          onDelete={onDeleteRecurring}
+          onRunNow={onRunRecurringNow}
         />
       ) : null}
     </div>

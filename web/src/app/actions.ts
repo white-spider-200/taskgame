@@ -19,6 +19,7 @@ import { prisma } from "@/lib/db";
 import { parseTextFormat } from "@/lib/code";
 import { CATEGORIES, USER_COLORS, initialFromName } from "@/lib/format";
 import { getTeamPayload, type SubmissionDTO } from "@/lib/team";
+import { lastDueAt, nextDueAt } from "@/lib/recurring";
 
 function toSubmissionDTO(submission: {
   type: string;
@@ -34,7 +35,7 @@ function toSubmissionDTO(submission: {
       id: f.id,
       url: f.url,
       name: f.name,
-      kind: f.kind as "image" | "video" | "spreadsheet",
+      kind: f.kind as "image" | "video" | "spreadsheet" | "doc",
     })),
   };
 }
@@ -62,19 +63,33 @@ const SPREADSHEET_EXTENSIONS: Record<string, string> = {
   xls: "xls",
   csv: "csv",
 };
+const ALLOWED_DOC_TYPES: Record<string, string> = {
+  "application/pdf": "pdf",
+};
+// Same mislabeling story as spreadsheets: some browsers send PDFs with an
+// empty or generic MIME type.
+const DOC_EXTENSIONS: Record<string, string> = { pdf: "pdf" };
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_SPREADSHEET_BYTES = 15 * 1024 * 1024;
+const MAX_DOC_BYTES = 20 * 1024 * 1024;
 const MAX_IMAGES_PER_SUBMISSION = 5;
 const MAX_VIDEOS_PER_SUBMISSION = 3;
 const MAX_SPREADSHEETS_PER_SUBMISSION = 3;
+const MAX_DOCS_PER_SUBMISSION = 3;
 
-type SavedFile = { url: string; name: string; kind: "image" | "video" | "spreadsheet" };
+type SavedFile = { url: string; name: string; kind: "image" | "video" | "spreadsheet" | "doc" };
 
 function isSpreadsheetFile(file: File): boolean {
   if (ALLOWED_SPREADSHEET_TYPES[file.type]) return true;
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   return (file.type === "" || file.type === "application/octet-stream") && !!SPREADSHEET_EXTENSIONS[ext];
+}
+
+function isDocFile(file: File): boolean {
+  if (ALLOWED_DOC_TYPES[file.type]) return true;
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return (file.type === "" || file.type === "application/octet-stream") && !!DOC_EXTENSIONS[ext];
 }
 
 async function validateAndSaveFiles(
@@ -94,20 +109,31 @@ async function validateAndSaveFiles(
       (isSpreadsheetFile(file)
         ? SPREADSHEET_EXTENSIONS[file.name.split(".").pop()!.toLowerCase()]
         : undefined);
-    if (!imageExt && !videoExt && !spreadsheetExt) {
+    const docExt =
+      ALLOWED_DOC_TYPES[mime] ??
+      (isDocFile(file) ? DOC_EXTENSIONS[file.name.split(".").pop()!.toLowerCase()] : undefined);
+    if (!imageExt && !videoExt && !spreadsheetExt && !docExt) {
       return {
         error:
-          "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV / XLSX / XLS / CSV)",
+          "صيغة الملف غير مدعومة (JPEG / PNG / WebP / GIF / MP4 / WebM / MOV / XLSX / XLS / CSV / PDF)",
       };
     }
-    const kind: "image" | "video" | "spreadsheet" = imageExt
+    const kind: "image" | "video" | "spreadsheet" | "doc" = imageExt
       ? "image"
       : videoExt
         ? "video"
-        : "spreadsheet";
-    const ext = imageExt ?? videoExt ?? spreadsheetExt!;
+        : spreadsheetExt
+          ? "spreadsheet"
+          : "doc";
+    const ext = imageExt ?? videoExt ?? spreadsheetExt ?? docExt!;
     const maxBytes =
-      kind === "video" ? MAX_VIDEO_BYTES : kind === "spreadsheet" ? MAX_SPREADSHEET_BYTES : MAX_IMAGE_BYTES;
+      kind === "video"
+        ? MAX_VIDEO_BYTES
+        : kind === "spreadsheet"
+          ? MAX_SPREADSHEET_BYTES
+          : kind === "doc"
+            ? MAX_DOC_BYTES
+            : MAX_IMAGE_BYTES;
     if (file.size > maxBytes) {
       return {
         error:
@@ -115,7 +141,9 @@ async function validateAndSaveFiles(
             ? "حجم الفيديو أكبر من 50 ميغابايت"
             : kind === "spreadsheet"
               ? "حجم ملف الإكسل أكبر من 15 ميغابايت"
-              : "حجم الصورة أكبر من 15 ميغابايت",
+              : kind === "doc"
+                ? "حجم ملف PDF أكبر من 20 ميغابايت"
+                : "حجم الصورة أكبر من 15 ميغابايت",
       };
     }
 
@@ -358,6 +386,210 @@ export async function createTaskAction(input: {
   return { ok: true as const };
 }
 
+// Re-runs a task you already did: same title/desc/category, fresh timer.
+export async function repeatTaskAction(taskId: string) {
+  const user = await requireUser();
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) return { error: "المهمة غير موجودة" };
+
+  const membership = await prisma.membership.findUnique({
+    where: { userId_teamId: { userId: user.id, teamId: task.teamId } },
+  });
+  if (!membership || membership.blocked) return { error: "لست عضوًا في هذا الفريق" };
+
+  const existing = await prisma.task.findFirst({
+    where: { teamId: task.teamId, ownerId: user.id, title: task.title, status: "running" },
+  });
+  if (existing) return { error: "لديك نسخة من هذه المهمة قيد التنفيذ بالفعل" };
+
+  await prisma.task.create({
+    data: {
+      title: task.title,
+      desc: task.desc,
+      category: task.category,
+      status: "running",
+      startedAt: new Date(),
+      teamId: task.teamId,
+      ownerId: user.id,
+    },
+  });
+
+  revalidatePath(`/t/${task.teamId}`);
+  return { ok: true as const };
+}
+
+const recurringInput = z.object({
+  teamId: z.string().min(1),
+  title: z.string().trim().min(1, "اكتب عنوان المهمة أولًا"),
+  desc: z.string().default(""),
+  category: z.string(),
+  freq: z.enum(["daily", "weekly", "monthly"]),
+  weekdays: z.array(z.number().int().min(0).max(6)).default([]),
+  monthDay: z.number().int().min(1).max(31).default(1),
+  hour: z.number().int().min(0).max(23).default(9),
+  minute: z.number().int().min(0).max(59).default(0),
+});
+
+export type RecurringInput = z.input<typeof recurringInput>;
+
+function validateRecurring(input: unknown) {
+  const parsed = recurringInput.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "بيانات غير صالحة" } as const;
+  }
+  const data = parsed.data;
+  if (!CATEGORIES.includes(data.category as (typeof CATEGORIES)[number])) {
+    return { error: "تصنيف غير صالح" } as const;
+  }
+  if (data.freq === "weekly" && data.weekdays.length === 0) {
+    return { error: "اختر يومًا واحدًا على الأقل" } as const;
+  }
+  return { data } as const;
+}
+
+export async function createRecurringTaskAction(input: RecurringInput) {
+  const user = await requireUser();
+  const checked = validateRecurring(input);
+  if ("error" in checked) return { error: checked.error };
+  const data = checked.data;
+
+  const membership = await prisma.membership.findUnique({
+    where: { userId_teamId: { userId: user.id, teamId: data.teamId } },
+  });
+  if (!membership || membership.blocked) return { error: "لست عضوًا في هذا الفريق" };
+
+  const count = await prisma.recurringTask.count({
+    where: { teamId: data.teamId, ownerId: user.id },
+  });
+  if (count >= 20) return { error: "وصلت للحد الأقصى (20 مهمة متكررة)" };
+
+  await prisma.recurringTask.create({
+    data: {
+      title: data.title,
+      desc: data.desc.trim(),
+      category: data.category,
+      freq: data.freq,
+      weekdays: data.weekdays.sort((a, b) => a - b).join(","),
+      monthDay: data.monthDay,
+      hour: data.hour,
+      minute: data.minute,
+      // Claim the occurrence that already passed today so a brand-new rule
+      // doesn't fire retroactively the moment it's saved.
+      lastRunAt: new Date(),
+      teamId: data.teamId,
+      ownerId: user.id,
+    },
+  });
+
+  revalidatePath(`/t/${data.teamId}`);
+  return { ok: true as const };
+}
+
+export async function updateRecurringTaskAction(
+  id: string,
+  input: Omit<RecurringInput, "teamId">,
+) {
+  const user = await requireUser();
+  const rule = await prisma.recurringTask.findUnique({ where: { id } });
+  if (!rule) return { error: "المهمة المتكررة غير موجودة" };
+  if (rule.ownerId !== user.id) return { error: "لا يمكنك تعديل هذه المهمة" };
+
+  const checked = validateRecurring({ ...input, teamId: rule.teamId });
+  if ("error" in checked) return { error: checked.error };
+  const data = checked.data;
+
+  await prisma.recurringTask.update({
+    where: { id },
+    data: {
+      title: data.title,
+      desc: data.desc.trim(),
+      category: data.category,
+      freq: data.freq,
+      weekdays: data.weekdays.sort((a, b) => a - b).join(","),
+      monthDay: data.monthDay,
+      hour: data.hour,
+      minute: data.minute,
+      // A rescheduled rule shouldn't backfire into its new past window.
+      lastRunAt: new Date(),
+    },
+  });
+
+  revalidatePath(`/t/${rule.teamId}`);
+  return { ok: true as const };
+}
+
+export async function toggleRecurringTaskAction(id: string, active: boolean) {
+  const user = await requireUser();
+  const rule = await prisma.recurringTask.findUnique({ where: { id } });
+  if (!rule) return { error: "المهمة المتكررة غير موجودة" };
+  if (rule.ownerId !== user.id) return { error: "لا يمكنك تعديل هذه المهمة" };
+
+  await prisma.recurringTask.update({
+    where: { id },
+    data: {
+      active,
+      // Resuming skips everything missed while paused.
+      lastRunAt: active ? new Date() : rule.lastRunAt,
+    },
+  });
+
+  revalidatePath(`/t/${rule.teamId}`);
+  return { ok: true as const };
+}
+
+export async function deleteRecurringTaskAction(id: string) {
+  const user = await requireUser();
+  const rule = await prisma.recurringTask.findUnique({ where: { id } });
+  if (!rule) return { error: "المهمة المتكررة غير موجودة" };
+  if (rule.ownerId !== user.id) return { error: "لا يمكنك حذف هذه المهمة" };
+
+  await prisma.recurringTask.delete({ where: { id } });
+
+  revalidatePath(`/t/${rule.teamId}`);
+  return { ok: true as const };
+}
+
+// "شغّلها الآن" — start this occurrence early without disturbing the schedule.
+export async function runRecurringTaskNowAction(id: string) {
+  const user = await requireUser();
+  const rule = await prisma.recurringTask.findUnique({ where: { id } });
+  if (!rule) return { error: "المهمة المتكررة غير موجودة" };
+  if (rule.ownerId !== user.id) return { error: "لا يمكنك تشغيل هذه المهمة" };
+
+  const existing = await prisma.task.findFirst({
+    where: { recurringId: rule.id, status: { in: ["running", "review"] } },
+  });
+  if (existing) return { error: "هذه المهمة قيد التنفيذ بالفعل" };
+
+  // Starting early consumes an occurrence rather than adding an extra one:
+  // the one that's already due if it hasn't fired yet, otherwise the next.
+  const now = new Date();
+  const due = lastDueAt(rule, now);
+  let mark = rule.lastRunAt;
+  if (due && (!rule.lastRunAt || due > rule.lastRunAt)) {
+    mark = due;
+  } else {
+    mark = nextDueAt(rule, now) ?? rule.lastRunAt;
+  }
+  await prisma.recurringTask.update({ where: { id }, data: { lastRunAt: mark } });
+
+  await prisma.task.create({
+    data: {
+      title: rule.title,
+      desc: rule.desc,
+      category: rule.category,
+      status: "running",
+      startedAt: now,
+      teamId: rule.teamId,
+      ownerId: rule.ownerId,
+      recurringId: rule.id,
+    },
+  });
+
+  revalidatePath(`/t/${rule.teamId}`);
+  return { ok: true as const };
+}
+
 export async function deleteTaskAction(taskId: string) {
   const user = await requireUser();
   const task = await prisma.task.findUnique({ where: { id: taskId } });
@@ -398,6 +630,10 @@ export async function finishTaskAction(formData: FormData) {
   const imageCount = files.filter((f) => ALLOWED_IMAGE_TYPES[f.type]).length;
   const videoCount = files.filter((f) => ALLOWED_VIDEO_TYPES[f.type]).length;
   const spreadsheetCount = files.filter((f) => isSpreadsheetFile(f)).length;
+  const docCount = files.filter((f) => isDocFile(f)).length;
+  if (docCount > MAX_DOCS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_DOCS_PER_SUBMISSION} ملفات PDF لكل إثبات` };
+  }
   if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
   }
@@ -483,6 +719,11 @@ export async function editSubmissionAction(formData: FormData) {
   const spreadsheetCount =
     keptFiles.filter((f) => f.kind === "spreadsheet").length +
     files.filter((f) => isSpreadsheetFile(f)).length;
+  const docCount =
+    keptFiles.filter((f) => f.kind === "doc").length + files.filter((f) => isDocFile(f)).length;
+  if (docCount > MAX_DOCS_PER_SUBMISSION) {
+    return { error: `الحد الأقصى ${MAX_DOCS_PER_SUBMISSION} ملفات PDF لكل إثبات` };
+  }
   if (imageCount > MAX_IMAGES_PER_SUBMISSION) {
     return { error: `الحد الأقصى ${MAX_IMAGES_PER_SUBMISSION} صور لكل إثبات` };
   }

@@ -11,6 +11,7 @@ import {
 } from "@/app/actions";
 import { Avatar } from "@/components/Avatar";
 import { ExcelPreview } from "@/components/ExcelPreview";
+import { PdfPreview } from "@/components/PdfPreview";
 import { FileDropZone } from "@/components/FileDropZone";
 import { linkifyText } from "@/components/Linkify";
 import { SubmissionText } from "@/components/SubmissionText";
@@ -28,7 +29,7 @@ import type { TeamPayload } from "@/lib/team";
 import { Toast } from "./playground/Toast";
 
 const FILE_ACCEPT =
-  "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,.xlsx,.xls,.csv";
+  "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/pdf,.xlsx,.xls,.csv,.pdf";
 
 export function TaskDetail({
   teamId,
@@ -543,7 +544,16 @@ export function TaskDetail({
                         ))}
                     </div>
                   ) : null}
-                  {task.submission.files.some((f) => f.kind !== "spreadsheet") ? (
+                  {task.submission.files.some((f) => f.kind === "doc") ? (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {task.submission.files
+                        .filter((f) => f.kind === "doc")
+                        .map((f) => (
+                          <PdfPreview key={f.id} url={f.url} name={f.name} />
+                        ))}
+                    </div>
+                  ) : null}
+                  {task.submission.files.some((f) => f.kind === "image" || f.kind === "video") ? (
                     <div
                       style={{
                         display: "grid",
@@ -552,7 +562,7 @@ export function TaskDetail({
                       }}
                     >
                       {task.submission.files
-                        .filter((f) => f.kind !== "spreadsheet")
+                        .filter((f) => f.kind === "image" || f.kind === "video")
                         .map((f, i) =>
                         f.kind === "video" ? (
                           <div

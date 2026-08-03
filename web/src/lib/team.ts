@@ -1,5 +1,6 @@
 import type { SubmissionTextFormat } from "./code";
 import { prisma } from "./db";
+import { materializeRecurringTasks, nextDueAt, parseWeekdays } from "./recurring";
 
 export type TeamMember = {
   id: string;
@@ -14,7 +15,7 @@ export type SubmissionFileDTO = {
   id: string;
   url: string;
   name: string;
-  kind: "image" | "video" | "spreadsheet";
+  kind: "image" | "video" | "spreadsheet" | "doc";
 };
 
 export type SubmissionDTO = {
@@ -37,7 +38,22 @@ export type TaskDTO = {
   stars: number | null;
   ratingsCount: number;
   myRating: number | null;
+  recurringId: string | null;
   submission: SubmissionDTO | null;
+};
+
+export type RecurringDTO = {
+  id: string;
+  title: string;
+  desc: string;
+  category: string;
+  freq: "daily" | "weekly" | "monthly";
+  weekdays: number[];
+  monthDay: number;
+  hour: number;
+  minute: number;
+  active: boolean;
+  nextDueAt: string | null;
 };
 
 export type TeamPayload = {
@@ -45,6 +61,7 @@ export type TeamPayload = {
   me: TeamMember & { email: string; isOwner: boolean };
   members: TeamMember[];
   tasks: TaskDTO[];
+  recurring: RecurringDTO[];
 };
 
 function pointsForMember(
@@ -95,6 +112,9 @@ export async function getTeamPayload(
 
   if (!membership || membership.blocked) return null;
 
+  // No cron: recurring rules catch up whenever someone opens the board.
+  await materializeRecurringTasks(membership.teamId);
+
   const members = await prisma.membership.findMany({
     where: { teamId: membership.teamId, blocked: false },
     include: { user: true },
@@ -108,6 +128,12 @@ export async function getTeamPayload(
       owner: true,
       submission: { include: { files: true } },
     },
+    orderBy: { createdAt: "desc" },
+  });
+
+  // Rules are personal — you only manage the ones you created.
+  const recurringRules = await prisma.recurringTask.findMany({
+    where: { teamId: membership.teamId, ownerId: userId },
     orderBy: { createdAt: "desc" },
   });
 
@@ -135,6 +161,7 @@ export async function getTeamPayload(
       : null,
     ratingsCount: t.ratings.length,
     myRating: t.ratings.find((r) => r.raterId === userId)?.stars ?? null,
+    recurringId: t.recurringId,
     submission: t.submission
       ? {
           type: t.submission.type as SubmissionDTO["type"],
@@ -144,11 +171,29 @@ export async function getTeamPayload(
             id: f.id,
             url: f.url,
             name: f.name,
-            kind: f.kind as "image" | "video" | "spreadsheet",
+            kind: f.kind as "image" | "video" | "spreadsheet" | "doc",
           })),
         }
       : null,
   }));
+
+  const now = new Date();
+  const recurringDTOs: RecurringDTO[] = recurringRules.map((r) => {
+    const next = r.active ? nextDueAt(r, now) : null;
+    return {
+      id: r.id,
+      title: r.title,
+      desc: r.desc,
+      category: r.category,
+      freq: r.freq as RecurringDTO["freq"],
+      weekdays: parseWeekdays(r.weekdays),
+      monthDay: r.monthDay,
+      hour: r.hour,
+      minute: r.minute,
+      active: r.active,
+      nextDueAt: next ? next.toISOString() : null,
+    };
+  });
 
   return {
     team: {
@@ -168,5 +213,6 @@ export async function getTeamPayload(
     },
     members: memberDTOs,
     tasks: taskDTOs,
+    recurring: recurringDTOs,
   };
 }

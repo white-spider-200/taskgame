@@ -219,7 +219,7 @@ async function taskBlocks(t: TaskDTO, index: number): Promise<Paragraph[]> {
         );
       }
     } else {
-      const kindLabel = f.kind === "spreadsheet" ? "جدول" : "فيديو";
+      const kindLabel = f.kind === "spreadsheet" ? "جدول" : f.kind === "doc" ? "ملف PDF" : "فيديو";
       blocks.push(
         rtlPara(bidiRuns(`${kindLabel}: ${f.name}`, { size: 20, color: MUTED }), {
           spacing: { after: 60 },

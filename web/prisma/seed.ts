@@ -9,6 +9,7 @@ async function main() {
   await prisma.rating.deleteMany();
   await prisma.submission.deleteMany();
   await prisma.task.deleteMany();
+  await prisma.recurringTask.deleteMany();
   await prisma.membership.deleteMany();
   await prisma.team.deleteMany();
   await prisma.user.deleteMany();
