@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.env
+.env.local
+.env.production
+npm-debug.log*
+prisma/dev.db
+prisma/*.db
+public/uploads/*
+!public/uploads/.gitkeep
